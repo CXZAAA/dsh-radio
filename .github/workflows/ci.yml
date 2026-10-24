@@ -30,12 +30,8 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      # pnpm-workspace.yaml 已把 store/cache 指到仓库内；这里再显式确认一次，
-      # 保证 checkout 出来的工作区里安装不依赖 $HOME 写权限。
-      - name: Point pnpm store inside the workspace
-        run: |
-          pnpm config set store-dir .pnpm-store
-          pnpm config get store-dir
+      # pnpm-workspace.yaml 已把 store/cache 指到仓库内（storeDir/cacheDir），
+      # 这里不再重复设置，避免全局配置与工作区配置冲突。
 
       - name: Install
         run: pnpm install --frozen-lockfile
