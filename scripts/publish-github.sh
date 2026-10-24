@@ -230,6 +230,8 @@ ASKPASS
     warn ""
     warn "推送失败（退出码 $push_status）。常见原因："
     warn "  · PAT 没有 Contents: Read and write 权限 → 回 GitHub 重新生成；"
+  warn "  · 仓库含 .github/workflows/*.yml 时还需要 Workflows: Read and write"
+  warn "    （fine-grained）或 workflow scope（classic），否则 GitHub 会拒绝推送；"
     warn "  · token 已过期或被删除；"
     warn "  · 网络无法访问 github.com。"
     exit "$push_status"
