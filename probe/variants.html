@@ -1,0 +1,1720 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0b0d12">
+<title>流地址变体对比</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #141821;
+    --panel-2: #0d1118;
+    --border: #242b38;
+    --border-strong: #334055;
+    --text: #edf1f7;
+    --muted: #96a1b2;
+    --muted-2: #758093;
+    --accent: #8ab4ff;
+    --green: #45d18a;
+    --amber: #e8b45b;
+    --red: #ff8585;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    background: var(--bg);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100svh;
+    background:
+      radial-gradient(900px 420px at 50% -160px, rgba(43, 62, 96, 0.55) 0%, transparent 70%),
+      var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+      "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    padding: calc(14px + env(safe-area-inset-top)) 16px
+      calc(34px + env(safe-area-inset-bottom));
+  }
+
+  .back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: 0 0 2px -2px;
+    padding: 0 2px;
+    color: var(--accent);
+    font-size: 16px;
+    line-height: 1.2;
+    text-decoration: none;
+  }
+
+  .head { padding: 0 2px 16px; }
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.3;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+  }
+
+  .sub {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .ip-card {
+    margin: 0 0 12px;
+    padding: 13px 15px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgba(31, 40, 56, 0.78), rgba(18, 23, 32, 0.92));
+  }
+
+  .ip-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .ip-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  .ip-dot {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 0 3px rgba(232, 180, 91, 0.12);
+  }
+
+  .ip-card[data-state="ok"] .ip-dot {
+    background: var(--green);
+    box-shadow: 0 0 0 3px rgba(69, 209, 138, 0.14);
+  }
+
+  .ip-card[data-state="fail"] .ip-dot {
+    background: var(--red);
+    box-shadow: 0 0 0 3px rgba(255, 133, 133, 0.13);
+  }
+
+  .ip-source {
+    color: var(--muted-2);
+    font-size: 15px;
+    text-align: right;
+  }
+
+  .ip-value {
+    margin-top: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 22px;
+    line-height: 1.35;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  .ip-value.is-fail { font-size: 19px; }
+
+  .ip-meta,
+  .ip-org {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .ip-org { color: var(--muted-2); }
+
+  .hint {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 16px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel-2);
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .hint b {
+    flex: none;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .block { margin-bottom: 24px; }
+
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 2px 10px;
+  }
+
+  .sec-head h2 {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.35;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+  }
+
+  .sec-meta {
+    flex: none;
+    color: var(--muted-2);
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .explain {
+    margin: 0 2px 8px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .explain.muted {
+    color: var(--muted-2);
+    margin-bottom: 12px;
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .station {
+    padding: 13px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+  }
+
+  .station.is-error {
+    border-color: rgba(255, 133, 133, 0.28);
+    background: #17141a;
+  }
+
+  .station-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .name {
+    font-size: 17px;
+    line-height: 1.35;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  .tag {
+    margin-left: 6px;
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 400;
+  }
+
+  .src {
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .caveat {
+    margin-top: 7px;
+    padding-left: 8px;
+    border-left: 2px solid rgba(232, 180, 91, 0.42);
+    color: #c7a86f;
+    font-size: 15px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .caveat[hidden] { display: none; }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    margin-top: 8px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: #11151d;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .badge.is-connecting {
+    border-color: rgba(232, 180, 91, 0.36);
+    background: rgba(232, 180, 91, 0.08);
+    color: var(--amber);
+    animation: pulse 1.25s ease-in-out infinite;
+  }
+
+  .badge.is-playing {
+    border-color: rgba(69, 209, 138, 0.34);
+    background: rgba(69, 209, 138, 0.08);
+    color: var(--green);
+  }
+
+  .badge.is-done {
+    border-color: rgba(69, 209, 138, 0.3);
+    background: rgba(69, 209, 138, 0.08);
+    color: var(--green);
+  }
+
+  .badge.is-error {
+    border-color: rgba(255, 133, 133, 0.34);
+    background: rgba(255, 133, 133, 0.08);
+    color: var(--red);
+  }
+
+  .note {
+    color: var(--muted-2);
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .note[hidden] { display: none; }
+
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 12px;
+    margin-top: 7px;
+    color: var(--muted-2);
+    font-size: 15px;
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stats .val {
+    color: #c6d0df;
+    font-weight: 600;
+  }
+
+  .play-btn {
+    flex: none;
+    min-width: 92px;
+    min-height: 52px;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background: #e8edf5;
+    color: #0c1119;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 650;
+    line-height: 1.2;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .play-btn:active { transform: scale(0.97); }
+
+  .play-btn.is-stop {
+    border-color: #643039;
+    background: #3a2026;
+    color: #ffb4b4;
+  }
+
+  .url {
+    margin-top: 11px;
+    padding: 8px 10px;
+    border: 1px dashed #3b4455;
+    border-radius: 10px;
+    background: var(--panel-2);
+    color: #b6c1d1;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 15px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  .url[hidden] { display: none; }
+
+  .preload {
+    margin-top: 9px;
+    padding: 8px 10px 9px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--panel-2);
+  }
+
+  .p-line {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #b6c1d1;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 15px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .p-dot {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--muted-2);
+  }
+
+  .preload[data-state="loading"] .p-dot {
+    background: var(--amber);
+    box-shadow: 0 0 0 3px rgba(232, 180, 91, 0.12);
+    animation: pulse 1.25s ease-in-out infinite;
+  }
+
+  .preload[data-state="partial"] .p-dot {
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(138, 180, 255, 0.13);
+  }
+
+  .preload[data-state="ready"] .p-dot {
+    background: var(--green);
+    box-shadow: 0 0 0 3px rgba(69, 209, 138, 0.14);
+  }
+
+  .preload[data-state="blocked"] .p-dot,
+  .preload[data-state="error"] .p-dot {
+    background: var(--red);
+    box-shadow: 0 0 0 3px rgba(255, 133, 133, 0.13);
+  }
+
+  .p-bar {
+    height: 3px;
+    margin-top: 7px;
+    border-radius: 999px;
+    background: #1b2230;
+    overflow: hidden;
+  }
+
+  .p-bar i {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: 999px;
+    background: #4e6b96;
+    transition: width 0.45s linear;
+  }
+
+  .preload[data-state="ready"] .p-bar i { background: rgba(69, 209, 138, 0.75); }
+  .preload[data-state="blocked"] .p-bar i,
+  .preload[data-state="error"] .p-bar i { background: rgba(255, 133, 133, 0.7); }
+
+  .station-wide .name { font-size: 18px; }
+
+  .b-btn {
+    width: 100%;
+    min-height: 50px;
+    margin-top: 12px;
+    font-size: 17px;
+  }
+
+  .segment {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .seg-btn {
+    flex: 1;
+    min-height: 44px;
+    padding: 0 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: #11151d;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .seg-btn[aria-pressed="true"] {
+    border-color: rgba(138, 180, 255, 0.55);
+    background: rgba(138, 180, 255, 0.13);
+    color: #cfe0ff;
+  }
+
+  .summary {
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+
+  .summary-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .summary-head h2 {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.35;
+    font-weight: 600;
+  }
+
+  .copy-btn {
+    min-width: 100px;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: #1a2331;
+    color: #dfe9fb;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .copy-btn:active { background: #223049; }
+
+  #summary {
+    display: block;
+    width: 100%;
+    min-height: 300px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel-2);
+    color: #c6d0df;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 15px;
+    line-height: 1.55;
+    resize: vertical;
+    spellcheck: false;
+  }
+
+  .copy-hint {
+    min-height: 23px;
+    margin: 6px 2px 0;
+    color: var(--muted-2);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .foot {
+    margin-top: 20px;
+    color: var(--muted-2);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .back:focus-visible,
+  .play-btn:focus-visible,
+  .seg-btn:focus-visible,
+  .copy-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
+  @media (max-width: 359px) {
+    .wrap { padding-left: 12px; padding-right: 12px; }
+    .play-btn { min-width: 82px; padding: 0 12px; }
+    .name { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <a class="back" href="./index.html">← 返回电台探测</a>
+
+  <header class="head">
+    <h1>流地址变体对比</h1>
+    <p class="sub">同一批电台的不同码率与地址逐条试播，记录首声耗时；另有预缓冲对照实验。</p>
+  </header>
+
+  <section class="ip-card" id="ipCard" data-state="loading" aria-live="polite">
+    <div class="ip-top">
+      <div class="ip-label"><span class="ip-dot"></span>本机出口 IP</div>
+      <span class="ip-source" id="ipSource"></span>
+    </div>
+    <div class="ip-value" id="ipValue">获取中…</div>
+    <div class="ip-meta" id="ipMeta">正在请求 ipinfo.io…</div>
+    <div class="ip-org" id="ipOrg"></div>
+  </section>
+
+  <p class="hint"><b>提示</b><span>同一行可重复点，第二次通常是暖缓存，请以首次为准。</span></p>
+
+  <section class="block" aria-labelledby="titleA">
+    <div class="sec-head">
+      <h2 id="titleA">A · 变体逐条测试</h2>
+      <span class="sec-meta">9 条</span>
+    </div>
+    <div class="list" id="listA" aria-label="流地址变体列表"></div>
+  </section>
+
+  <section class="block" aria-labelledby="titleB">
+    <div class="sec-head">
+      <h2 id="titleB">B · 预缓冲实验</h2>
+      <span class="sec-meta">对照</span>
+    </div>
+    <p class="explain">下面两行对比：一行在页面加载时就偷偷预缓冲，另一行不预缓冲。想验证「提前 load 能不能把首声从 5 秒降到 1 秒」。</p>
+    <p class="explain muted">页面加载后立即创建两个隐藏的 Audio（preload=auto，不 play），每 500ms 刷新 readyState 与已缓冲秒数。iOS Safari 可能在未播放时限制预加载：若 readyState 一直为 0，就是被限制了，会如实显示「系统未预加载」。</p>
+    <div class="list" id="listB" aria-label="预缓冲实验"></div>
+  </section>
+
+  <section class="summary" aria-labelledby="summaryTitle">
+    <div class="summary-head">
+      <h2 id="summaryTitle">结果汇总</h2>
+      <button class="copy-btn" id="copyBtn" type="button">复制结果</button>
+    </div>
+    <textarea id="summary" readonly rows="16" spellcheck="false" aria-label="对比结果文本"></textarea>
+    <p class="copy-hint" id="copyHint"></p>
+  </section>
+
+  <footer class="foot">
+    所有测量都在本机浏览器内完成，首声以 playing 事件为准。A 区失败的行会显示 URL，便于截图反馈。<br>
+    预缓冲只在这台手机上才有意义：iOS 省电策略、网络切换和自动播放限制都可能改变结果。
+  </footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var PLAY_SECONDS = 6;
+  var TIMEOUT_MS = 15000;
+  var PRELOAD_TICK_MS = 500;
+  var PRELOAD_GRACE_MS = 3000;
+  var BUFFER_BAR_SECONDS = 30;
+
+  var ERROR_TEXT = {
+    1: '已中止（MEDIA_ERR_ABORTED）',
+    2: '网络错误（MEDIA_ERR_NETWORK）',
+    3: '解码错误（MEDIA_ERR_DECODE）',
+    4: '源不支持（MEDIA_ERR_SRC_NOT_SUPPORTED）'
+  };
+
+  var A_ITEMS = [
+    {
+      key: 'nightride-mp3-320',
+      name: 'Nightride',
+      label: 'Nightride · mp3 320',
+      summary: 'Nightride mp3 320',
+      url: 'https://stream.nightride.fm/chillsynth.mp3'
+    },
+    {
+      key: 'nightride-ogg',
+      name: 'Nightride',
+      label: 'Nightride · ogg/Opus',
+      summary: 'Nightride ogg/Opus',
+      url: 'https://stream.nightride.fm/chillsynth.ogg',
+      caveat: 'iOS 可能不支持，失败属预期'
+    },
+    {
+      key: 'rp-main-aac-320',
+      name: 'RP Main',
+      label: 'RP Main · AAC 320',
+      summary: 'RP Main AAC 320',
+      url: 'https://stream.radioparadise.com/aac-320'
+    },
+    {
+      key: 'rp-main-aac-128',
+      name: 'RP Main',
+      label: 'RP Main · AAC 128',
+      summary: 'RP Main AAC 128',
+      url: 'https://stream.radioparadise.com/aac-128'
+    },
+    {
+      key: 'rp-main-mp3-128',
+      name: 'RP Main',
+      label: 'RP Main · MP3 128',
+      summary: 'RP Main MP3 128',
+      url: 'https://stream.radioparadise.com/mp3-128'
+    },
+    {
+      key: 'rp-mellow-aac-320',
+      name: 'RP Mellow',
+      label: 'RP Mellow · AAC 320',
+      summary: 'RP Mellow AAC 320',
+      url: 'https://stream.radioparadise.com/mellow-320'
+    },
+    {
+      key: 'rp-mellow-aac-128',
+      name: 'RP Mellow',
+      label: 'RP Mellow · AAC 128',
+      summary: 'RP Mellow AAC 128',
+      url: 'https://stream.radioparadise.com/mellow-128'
+    },
+    {
+      key: 'eve-https-8010',
+      name: 'EVE',
+      label: 'EVE · https 8010',
+      summary: 'EVE https 8010',
+      url: 'https://media01.gamingnow.net:8010/erweb.mp3'
+    },
+    {
+      key: 'eve-http-8000',
+      name: 'EVE',
+      label: 'EVE · http 8000',
+      summary: 'EVE http 8000',
+      url: 'http://media01.gamingnow.net:8000/er.mp3',
+      caveat: '页面是 http，所以不会混合内容；但如果你以后把 dsh 跑在 https 上这条会失效'
+    }
+  ];
+
+  var B_ITEMS = [
+    {
+      key: 'preload-nightride',
+      name: 'Nightride',
+      tag: 'mp3 320',
+      label: '预缓冲 · Nightride',
+      summary: '预缓冲 Nightride',
+      url: 'https://stream.nightride.fm/chillsynth.mp3'
+    },
+    {
+      key: 'preload-rp',
+      name: 'RP Main',
+      tag: 'AAC 128',
+      label: '预缓冲 · RP Main',
+      summary: '预缓冲 RP Main',
+      url: 'https://stream.radioparadise.com/aac-128'
+    }
+  ];
+
+  var CONTROL_TARGETS = [
+    {
+      key: 'nightride',
+      label: 'Nightride',
+      detail: 'mp3 320',
+      url: 'https://stream.nightride.fm/chillsynth.mp3'
+    },
+    {
+      key: 'rp',
+      label: 'RP Main',
+      detail: 'AAC 128',
+      url: 'https://stream.radioparadise.com/aac-128'
+    }
+  ];
+
+  var els = {
+    ipCard: document.getElementById('ipCard'),
+    ipValue: document.getElementById('ipValue'),
+    ipMeta: document.getElementById('ipMeta'),
+    ipOrg: document.getElementById('ipOrg'),
+    ipSource: document.getElementById('ipSource'),
+    listA: document.getElementById('listA'),
+    listB: document.getElementById('listB'),
+    summary: document.getElementById('summary'),
+    copyBtn: document.getElementById('copyBtn'),
+    copyHint: document.getElementById('copyHint')
+  };
+
+  var app = {
+    ipStatus: 'loading',
+    ip: null,
+    active: null,
+    loadedAt: performance.now(),
+    rowsA: [],
+    rowsB: [],
+    control: null
+  };
+
+  var runSeq = 0;
+  var copyTimer = null;
+
+  function pad2(n) {
+    return n < 10 ? '0' + n : String(n);
+  }
+
+  function nowText() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) +
+      ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+  }
+
+  function setText(el, text) {
+    if (el.textContent !== text) el.textContent = text;
+  }
+
+  function fmtSeconds(value) {
+    return value == null ? '—' : value.toFixed(1) + 's';
+  }
+
+  function padLabel(text, width) {
+    var pad = width - displayWidth(text);
+    if (pad <= 0) return text;
+    return text + new Array(pad + 1).join(' ');
+  }
+
+  function displayWidth(text) {
+    var width = 0;
+    for (var i = 0; i < text.length; i++) {
+      var code = text.charCodeAt(i);
+      var wide = (code >= 0x1100 && code <= 0x115f) ||
+        (code >= 0x2e80 && code <= 0xa4cf) ||
+        (code >= 0xac00 && code <= 0xd7a3) ||
+        (code >= 0xf900 && code <= 0xfaff) ||
+        (code >= 0xfe30 && code <= 0xfe6f) ||
+        (code >= 0xff00 && code <= 0xff60) ||
+        (code >= 0xffe0 && code <= 0xffe6);
+      width += wide ? 2 : 1;
+    }
+    return width;
+  }
+
+  function shortUrl(url) {
+    return url.replace(/^https?:\/\//, '');
+  }
+
+  function makeStat(prefix) {
+    var wrap = document.createElement('span');
+    wrap.textContent = prefix;
+    var val = document.createElement('span');
+    val.className = 'val';
+    val.textContent = '—';
+    wrap.appendChild(val);
+    return { wrap: wrap, val: val };
+  }
+
+  function buildCard(row, item) {
+    var card = document.createElement('article');
+    card.className = 'station';
+
+    var main = document.createElement('div');
+    main.className = 'station-main';
+
+    var info = document.createElement('div');
+    info.className = 'info';
+
+    var name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = item.label;
+
+    var src = document.createElement('div');
+    src.className = 'src';
+    src.textContent = shortUrl(item.url);
+
+    var meta = document.createElement('div');
+    meta.className = 'meta';
+
+    var badge = document.createElement('span');
+    badge.className = 'badge';
+    badge.textContent = '待测';
+
+    var note = document.createElement('span');
+    note.className = 'note';
+    note.hidden = true;
+
+    meta.appendChild(badge);
+    meta.appendChild(note);
+
+    var stats = document.createElement('div');
+    stats.className = 'stats';
+    var statLast = makeStat('上次 ');
+    stats.appendChild(statLast.wrap);
+
+    var statExtra = null;
+    if (row.kind === 'A') {
+      statExtra = makeStat('最快 ');
+    } else if (row.kind === 'B-preload') {
+      statExtra = makeStat('点击时 readyState ');
+    } else {
+      statExtra = makeStat('目标 ');
+    }
+    stats.appendChild(statExtra.wrap);
+
+    var caveat = null;
+    if (item.caveat) {
+      caveat = document.createElement('div');
+      caveat.className = 'caveat';
+      caveat.textContent = item.caveat;
+    }
+
+    info.appendChild(name);
+    info.appendChild(src);
+    if (caveat) info.appendChild(caveat);
+    info.appendChild(meta);
+    info.appendChild(stats);
+
+    main.appendChild(info);
+
+    var btn = null;
+    if (row.kind === 'A') {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'play-btn';
+      btn.textContent = '播放';
+      btn.addEventListener('click', function () { onRowClick(row); });
+      main.appendChild(btn);
+    }
+
+    card.appendChild(main);
+
+    if (row.kind !== 'A') {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'play-btn b-btn';
+      button.textContent = row.kind === 'B-preload' ? '播放（已预缓冲）' : '播放（不预缓冲）';
+      button.addEventListener('click', function () {
+        if (row.kind === 'B-preload') onPreloadClick(row);
+        else onControlClick(row);
+      });
+      card.appendChild(button);
+      row.btn = button;
+    } else {
+      row.btn = btn;
+    }
+
+    var urlEl = document.createElement('div');
+    urlEl.className = 'url';
+    urlEl.hidden = true;
+    urlEl.textContent = item.url;
+    card.appendChild(urlEl);
+    row.urlEl = urlEl;
+
+    row.card = card;
+    row.badge = badge;
+    row.noteEl = note;
+    row.statLast = statLast.val;
+    row.statExtra = statExtra.val;
+    row.srcEl = src;
+
+    return card;
+  }
+
+  function buildA() {
+    A_ITEMS.forEach(function (item) {
+      var row = {
+        kind: 'A',
+        item: item,
+        state: 'idle',
+        note: '',
+        firstSound: null,
+        last: null,
+        best: null,
+        errorCode: null,
+        run: null,
+        audio: null
+      };
+
+      els.listA.appendChild(buildCard(row, item));
+      app.rowsA.push(row);
+      updateRowA(row);
+    });
+  }
+
+  function makePreloadAudio(url) {
+    var audio = new Audio();
+    audio.preload = 'auto';
+    audio.src = url;
+    try { audio.load(); } catch (err) { /* ignore */ }
+    return audio;
+  }
+
+  function buildB() {
+    B_ITEMS.forEach(function (item) {
+      var row = {
+        kind: 'B-preload',
+        item: item,
+        state: 'idle',
+        note: '',
+        firstSound: null,
+        last: null,
+        best: null,
+        errorCode: null,
+        lastClickReadyState: null,
+        run: null,
+        audio: null,
+        el: makePreloadAudio(item.url)
+      };
+
+      var card = buildCard(row, item);
+      card.classList.add('station-wide');
+
+      var nameEl = card.querySelector('.name');
+      var tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = item.tag;
+      nameEl.appendChild(tag);
+
+      var preload = document.createElement('div');
+      preload.className = 'preload';
+      preload.dataset.state = 'loading';
+
+      var line = document.createElement('div');
+      line.className = 'p-line';
+
+      var dot = document.createElement('span');
+      dot.className = 'p-dot';
+
+      var ptext = document.createElement('span');
+      ptext.textContent = 'readyState 0 · 加载中… · 已缓冲 0.0s';
+
+      line.appendChild(dot);
+      line.appendChild(ptext);
+
+      var bar = document.createElement('div');
+      bar.className = 'p-bar';
+      var fill = document.createElement('i');
+      bar.appendChild(fill);
+
+      preload.appendChild(line);
+      preload.appendChild(bar);
+
+      var infoEl = card.querySelector('.info');
+      infoEl.insertBefore(preload, infoEl.querySelector('.meta'));
+
+      row.preload = preload;
+      row.preloadText = ptext;
+      row.preloadFill = fill;
+
+      els.listB.appendChild(card);
+      app.rowsB.push(row);
+      updateRowB(row);
+      updatePreloadPanel(row);
+    });
+
+    var controlItem = {
+      key: 'control',
+      label: '对照 · 不预缓冲',
+      summary: '对照 不预缓冲',
+      url: CONTROL_TARGETS[0].url,
+      caveat: '点击时才 new Audio()，不复用上面的预缓冲'
+    };
+
+    var control = {
+      kind: 'B-control',
+      item: controlItem,
+      state: 'idle',
+      note: '',
+      firstSound: null,
+      last: null,
+      best: null,
+      errorCode: null,
+      lastClickReadyState: null,
+      lastTarget: null,
+      target: CONTROL_TARGETS[0],
+      run: null,
+      audio: null
+    };
+
+    var card = buildCard(control, controlItem);
+    card.classList.add('station-wide');
+
+    var segment = document.createElement('div');
+    segment.className = 'segment';
+    segment.setAttribute('role', 'group');
+    segment.setAttribute('aria-label', '对照目标');
+
+    CONTROL_TARGETS.forEach(function (target) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'seg-btn';
+      b.textContent = target.label;
+      b.setAttribute('aria-pressed', target.key === control.target.key ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        control.target = target;
+        Array.prototype.forEach.call(segment.children, function (other) {
+          other.setAttribute('aria-pressed', other === b ? 'true' : 'false');
+        });
+        updateRowB(control);
+        renderSummary();
+      });
+      segment.appendChild(b);
+    });
+
+    card.insertBefore(segment, card.querySelector('.b-btn'));
+
+    app.control = control;
+    app.rowsB.push(control);
+    els.listB.appendChild(card);
+    updateRowB(control);
+  }
+
+  function updateRowA(row) {
+    var badgeText = '待测';
+    var badgeClass = 'badge';
+    var showUrl = false;
+
+    if (row.state === 'connecting') {
+      badgeText = '连接中…';
+      badgeClass = 'badge is-connecting';
+    } else if (row.state === 'playing') {
+      badgeText = '播放中 · ' + fmtSeconds(row.firstSound);
+      badgeClass = 'badge is-playing';
+    } else if (row.state === 'done') {
+      badgeText = '✅ ' + fmtSeconds(row.last);
+      badgeClass = 'badge is-done';
+    } else if (row.state === 'failed') {
+      badgeText = '❌ error=' + (row.errorCode == null ? '?' : row.errorCode);
+      badgeClass = 'badge is-error';
+      showUrl = true;
+    } else if (row.state === 'timeout') {
+      badgeText = '❌ 超时';
+      badgeClass = 'badge is-error';
+      showUrl = true;
+    } else if (row.state === 'blocked') {
+      badgeText = '❌ 被拦截';
+      badgeClass = 'badge is-error';
+      showUrl = true;
+    } else if (row.state === 'cancelled') {
+      badgeText = '已取消';
+    }
+
+    setText(row.badge, badgeText);
+    row.badge.className = badgeClass;
+    setText(row.noteEl, row.note || '');
+    row.noteEl.hidden = !row.note;
+    row.urlEl.hidden = !showUrl;
+    row.card.classList.toggle('is-error', showUrl);
+
+    row.statLast.textContent = fmtSeconds(row.last);
+    row.statExtra.textContent = fmtSeconds(row.best);
+
+    var active = app.active === row;
+    setText(row.btn, active ? '停止' : '播放');
+    row.btn.classList.toggle('is-stop', active);
+    row.btn.setAttribute('aria-label', (active ? '停止 ' : '播放 ') + row.item.label);
+  }
+
+  function updateRowB(row) {
+    var badgeText = '待测';
+    var badgeClass = 'badge';
+    var showUrl = false;
+
+    if (row.state === 'connecting') {
+      badgeText = '连接中…';
+      badgeClass = 'badge is-connecting';
+    } else if (row.state === 'playing') {
+      badgeText = '播放中 · ' + fmtSeconds(row.firstSound);
+      badgeClass = 'badge is-playing';
+    } else if (row.state === 'done') {
+      badgeText = '✅ ' + fmtSeconds(row.last);
+      badgeClass = 'badge is-done';
+    } else if (row.state === 'failed') {
+      badgeText = '❌ error=' + (row.errorCode == null ? '?' : row.errorCode);
+      badgeClass = 'badge is-error';
+      showUrl = true;
+    } else if (row.state === 'timeout') {
+      badgeText = '❌ 超时';
+      badgeClass = 'badge is-error';
+      showUrl = true;
+    } else if (row.state === 'blocked') {
+      badgeText = '❌ 被拦截';
+      badgeClass = 'badge is-error';
+      showUrl = true;
+    } else if (row.state === 'cancelled') {
+      badgeText = '已取消';
+    }
+
+    setText(row.badge, badgeText);
+    row.badge.className = badgeClass;
+    setText(row.noteEl, row.note || '');
+    row.noteEl.hidden = !row.note;
+    row.urlEl.hidden = !showUrl;
+    row.card.classList.toggle('is-error', showUrl);
+
+    row.statLast.textContent = fmtSeconds(row.last);
+    if (row.kind === 'B-preload') {
+      row.statExtra.textContent = row.lastClickReadyState == null
+        ? '—' : String(row.lastClickReadyState);
+    } else {
+      var target = row.lastTarget || row.target;
+      row.statExtra.textContent = target ? target.label : '—';
+      if (row.srcEl && row.target) row.srcEl.textContent = shortUrl(row.target.url);
+    }
+
+    var active = app.active === row;
+    var idleText = row.kind === 'B-preload' ? '播放（已预缓冲）' : '播放（不预缓冲）';
+    setText(row.btn, active ? '停止' : idleText);
+    row.btn.classList.toggle('is-stop', active);
+    row.btn.setAttribute('aria-label', (active ? '停止 ' : idleText + ' ') + row.item.label);
+  }
+
+  function updateAllRows() {
+    app.rowsA.forEach(updateRowA);
+    app.rowsB.forEach(updateRowB);
+  }
+
+  function bufferedSeconds(audio) {
+    try {
+      var ranges = audio.buffered;
+      if (!ranges || !ranges.length) return 0;
+      var t = audio.currentTime || 0;
+      for (var i = 0; i < ranges.length; i++) {
+        if (t >= ranges.start(i) - 0.5 && t <= ranges.end(i) + 0.5) {
+          return Math.max(0, ranges.end(i) - ranges.start(i));
+        }
+      }
+      var last = ranges.length - 1;
+      return Math.max(0, ranges.end(last) - ranges.start(last));
+    } catch (err) {
+      return 0;
+    }
+  }
+
+  function updatePreloadPanel(row) {
+    if (!row.el || !row.preload) return;
+
+    var audio = row.el;
+    var rs = audio.readyState;
+    var buf = bufferedSeconds(audio);
+    var elapsed = performance.now() - app.loadedAt;
+    var errCode = audio.error ? audio.error.code : 0;
+    var state = 'loading';
+    var text = '';
+
+    if (errCode) {
+      state = 'error';
+      text = '预加载失败 error=' + errCode + ' · readyState ' + rs;
+    } else if (rs === 0) {
+      if (elapsed >= PRELOAD_GRACE_MS) {
+        state = 'blocked';
+        text = 'readyState 0 · 系统未预加载 · 已缓冲 0.0s';
+      } else {
+        state = 'loading';
+        text = 'readyState 0 · 加载中… · 已缓冲 0.0s';
+      }
+    } else if (rs === 1) {
+      state = 'loading';
+      text = 'readyState 1 · 读取元数据… · 已缓冲 ' + buf.toFixed(1) + 's';
+    } else if (rs === 2) {
+      state = 'loading';
+      text = 'readyState 2 · 已有元数据 · 已缓冲 ' + buf.toFixed(1) + 's';
+    } else if (rs === 3) {
+      state = 'partial';
+      text = 'readyState 3 · 可播放 · 已缓冲 ' + buf.toFixed(1) + 's';
+    } else {
+      state = 'ready';
+      text = 'readyState 4 · 已就绪 · 已缓冲 ' + buf.toFixed(1) + 's';
+    }
+
+    if (row.preload.dataset.state !== state) row.preload.dataset.state = state;
+    setText(row.preloadText, text);
+    var pct = Math.max(0, Math.min(1, buf / BUFFER_BAR_SECONDS)) * 100;
+    row.preloadFill.style.width = pct.toFixed(1) + '%';
+  }
+
+  function startPreloadTicker() {
+    updatePreloadPanels();
+    setInterval(updatePreloadPanels, PRELOAD_TICK_MS);
+  }
+
+  function updatePreloadPanels() {
+    app.rowsB.forEach(function (row) {
+      if (row.kind === 'B-preload') updatePreloadPanel(row);
+    });
+  }
+
+  function onRowClick(row) {
+    if (app.active === row) {
+      stopActive('manual');
+      return;
+    }
+    if (app.active) stopActive('switch');
+
+    var audio = new Audio();
+    audio.preload = 'auto';
+    audio.src = row.item.url;
+    startRun(row, audio, false);
+  }
+
+  function onPreloadClick(row) {
+    if (app.active === row) {
+      stopActive('manual');
+      return;
+    }
+    if (app.active) stopActive('switch');
+
+    var audio = row.el;
+    if (!audio) return;
+    row.lastClickReadyState = audio.readyState;
+
+    if (audio.error) {
+      row.state = 'failed';
+      row.errorCode = audio.error.code;
+      row.note = ERROR_TEXT[audio.error.code] || '预加载失败';
+      updateAllRows();
+      renderSummary();
+      return;
+    }
+
+    startRun(row, audio, true);
+  }
+
+  function onControlClick(row) {
+    if (app.active === row) {
+      stopActive('manual');
+      return;
+    }
+    if (app.active) stopActive('switch');
+
+    var target = row.target;
+    row.lastTarget = target;
+    row.lastClickReadyState = null;
+
+    var audio = new Audio();
+    audio.preload = 'auto';
+    audio.src = target.url;
+    startRun(row, audio, false);
+  }
+
+  function startRun(row, audio, keepBuffer) {
+    var run = {
+      token: ++runSeq,
+      audio: audio,
+      keepBuffer: keepBuffer,
+      settled: false,
+      startedAt: performance.now(),
+      timeoutTimer: null,
+      autoTimer: null,
+      onPlaying: null,
+      onError: null
+    };
+
+    row.audio = audio;
+    row.run = run;
+    row.state = 'connecting';
+    row.firstSound = null;
+    row.errorCode = null;
+    row.note = '';
+    app.active = row;
+    updateAllRows();
+    renderSummary();
+
+    run.onPlaying = function () {
+      if (run.settled || row.run !== run) return;
+      if (row.firstSound != null) return;
+
+      var seconds = Math.max(0.1, (performance.now() - run.startedAt) / 1000);
+      row.firstSound = seconds;
+      row.last = seconds;
+      if (row.kind === 'A') {
+        row.best = row.best == null ? seconds : Math.min(row.best, seconds);
+      }
+      row.state = 'playing';
+      row.note = '正在播放，' + PLAY_SECONDS + ' 秒后自动停止';
+
+      if (run.timeoutTimer) {
+        clearTimeout(run.timeoutTimer);
+        run.timeoutTimer = null;
+      }
+
+      updateAllRows();
+      renderSummary();
+
+      run.autoTimer = setTimeout(function () {
+        if (run.settled || row.run !== run) return;
+        finishRun(row, run, function () {
+          row.state = 'done';
+          row.note = row.kind === 'B-preload'
+            ? '已自动停止（再次点击为暖缓冲）'
+            : (row.kind === 'B-control'
+              ? '已自动停止（下一次仍重新请求）'
+              : '已自动停止（播放 ' + PLAY_SECONDS + ' 秒）');
+        });
+      }, PLAY_SECONDS * 1000);
+    };
+
+    run.onError = function () {
+      if (run.settled || row.run !== run) return;
+      var code = run.audio.error ? run.audio.error.code : 0;
+      finishRun(row, run, function () {
+        row.state = 'failed';
+        row.errorCode = code;
+        row.note = ERROR_TEXT[code] || '未知媒体错误';
+      });
+    };
+
+    audio.addEventListener('playing', run.onPlaying);
+    audio.addEventListener('error', run.onError);
+
+    run.timeoutTimer = setTimeout(function () {
+      if (run.settled || row.run !== run) return;
+      finishRun(row, run, function () {
+        row.state = 'timeout';
+        row.note = '15 秒内未开始播放';
+      });
+    }, TIMEOUT_MS);
+
+    function handlePlayError(err) {
+      if (run.settled || row.run !== run) return;
+      var name = err && err.name ? err.name : '';
+      var message = err && err.message ? String(err.message) : '';
+
+      if (name === 'NotAllowedError' || /not.?allowed/i.test(message)) {
+        finishRun(row, run, function () {
+          row.state = 'blocked';
+          row.note = '浏览器拦截了自动播放';
+        });
+        return;
+      }
+      if (name === 'AbortError') return;
+
+      var code = run.audio.error ? run.audio.error.code : 0;
+      finishRun(row, run, function () {
+        row.state = 'failed';
+        row.errorCode = code;
+        row.note = code ? (ERROR_TEXT[code] || '播放失败')
+          : '无法播放（' + (name || '未知错误') + '）';
+      });
+    }
+
+    var playPromise = null;
+    try {
+      playPromise = audio.play();
+    } catch (err) {
+      handlePlayError(err);
+    }
+    if (playPromise && typeof playPromise.then === 'function') {
+      playPromise.catch(handlePlayError);
+    }
+  }
+
+  function detachRun(run) {
+    if (!run || !run.audio) return;
+    if (run.onPlaying) run.audio.removeEventListener('playing', run.onPlaying);
+    if (run.onError) run.audio.removeEventListener('error', run.onError);
+    clearTimeout(run.timeoutTimer);
+    clearTimeout(run.autoTimer);
+  }
+
+  function stopAudio(run) {
+    var audio = run.audio;
+    if (!audio) return;
+    try { audio.pause(); } catch (err) { /* ignore */ }
+    if (!run.keepBuffer) {
+      try {
+        audio.removeAttribute('src');
+        audio.load();
+      } catch (err) { /* ignore */ }
+    }
+  }
+
+  function finishRun(row, run, patch) {
+    if (!run || run.settled) return;
+    run.settled = true;
+    detachRun(run);
+    stopAudio(run);
+
+    if (app.active === row) app.active = null;
+    row.audio = null;
+    row.run = null;
+
+    patch();
+    updateAllRows();
+    renderSummary();
+  }
+
+  function stopActive(reason) {
+    var row = app.active;
+    if (!row) return;
+
+    var run = row.run;
+    if (run) {
+      run.settled = true;
+      detachRun(run);
+      stopAudio(run);
+    }
+
+    app.active = null;
+    row.audio = null;
+    row.run = null;
+
+    if (row.state === 'playing' && row.firstSound != null) {
+      row.state = 'done';
+      row.note = reason === 'switch' ? '已停止（切换到另一条）' : '已手动停止';
+    } else if (row.state === 'connecting') {
+      row.state = 'cancelled';
+      row.note = '已取消';
+    }
+
+    updateAllRows();
+    renderSummary();
+  }
+
+  function ipSummaryLine() {
+    if (app.ipStatus === 'fail') return '出口IP: 无法获取';
+    if (app.ipStatus !== 'ok' || !app.ip) return '出口IP: 获取中…';
+    var d = app.ip;
+    var parts = [d.country, d.city, d.org].filter(Boolean);
+    if (!parts.length) parts = ['仅 IP'];
+    return '出口IP: ' + d.ip + ' (' + parts.join('/') + ')';
+  }
+
+  function outcomeA(row) {
+    if (row.state === 'done' && row.last != null) {
+      var text = '✅ ' + fmtSeconds(row.last);
+      if (row.best != null) text += ' (最快 ' + fmtSeconds(row.best) + ')';
+      return text;
+    }
+    if (row.state === 'failed') {
+      return '❌ error=' + (row.errorCode == null ? '?' : row.errorCode) +
+        (ERROR_TEXT[row.errorCode] ? ' · ' + ERROR_TEXT[row.errorCode] : '');
+    }
+    if (row.state === 'timeout') return '❌ 超时';
+    if (row.state === 'blocked') return '❌ 被拦截';
+    if (row.state === 'cancelled') return '— 已取消';
+    if (row.state === 'playing') return '▶ 播放中';
+    if (row.state === 'connecting') return '… 连接中';
+    return '· 未测';
+  }
+
+  function outcomeB(row) {
+    if (row.state === 'done' && row.last != null) {
+      return '✅ ' + fmtSeconds(row.last);
+    }
+    if (row.state === 'failed') {
+      return '❌ error=' + (row.errorCode == null ? '?' : row.errorCode) +
+        (ERROR_TEXT[row.errorCode] ? ' · ' + ERROR_TEXT[row.errorCode] : '');
+    }
+    if (row.state === 'timeout') return '❌ 超时';
+    if (row.state === 'blocked') return '❌ 被拦截';
+    if (row.state === 'cancelled') return '— 已取消';
+    if (row.state === 'playing') return '▶ 播放中';
+    if (row.state === 'connecting') return '… 连接中';
+    return '· 未测';
+  }
+
+  function renderSummary() {
+    var lines = [ipSummaryLine(), '时间: ' + nowText()];
+
+    app.rowsA.forEach(function (row) {
+      lines.push('[A] ' + padLabel(row.item.summary, 22) + ' ' + outcomeA(row));
+    });
+
+    app.rowsB.forEach(function (row) {
+      var line = '[B] ' + padLabel(row.item.summary, 18) + ' ' + outcomeB(row);
+      if (row.kind === 'B-preload' && row.lastClickReadyState != null) {
+        line += '  readyState=' + row.lastClickReadyState;
+      }
+      if (row.kind === 'B-control') {
+        var target = row.lastTarget || row.target;
+        if (target && row.state !== 'idle') line += ' 目标=' + target.label;
+      }
+      lines.push(line);
+    });
+
+    els.summary.value = lines.join('\n');
+  }
+
+  function renderIp() {
+    if (app.ipStatus === 'loading') {
+      els.ipCard.dataset.state = 'loading';
+      setText(els.ipValue, '获取中…');
+      els.ipValue.classList.remove('is-fail');
+      setText(els.ipMeta, '正在请求 ipinfo.io…');
+      setText(els.ipOrg, '');
+      setText(els.ipSource, '');
+      return;
+    }
+
+    if (app.ipStatus === 'fail') {
+      els.ipCard.dataset.state = 'fail';
+      setText(els.ipValue, '无法获取出口 IP');
+      els.ipValue.classList.add('is-fail');
+      setText(els.ipMeta, 'ipinfo.io 与 ipify 均不可达，可能被当前网络拦截。');
+      setText(els.ipOrg, '');
+      setText(els.ipSource, '');
+      return;
+    }
+
+    var d = app.ip;
+    els.ipCard.dataset.state = 'ok';
+    els.ipValue.classList.remove('is-fail');
+    setText(els.ipValue, d.ip);
+
+    var place = [d.country, d.region, d.city].filter(Boolean).join(' · ');
+    setText(els.ipMeta, place || '地区未知（只拿到 IP）');
+
+    var org = d.org || (d.source === 'ipify' ? '运营商未知（ipify 只返回 IP）' : '运营商未知');
+    setText(els.ipOrg, org);
+    setText(els.ipSource, '来源 ' + d.source);
+  }
+
+  function fetchJson(url, timeoutMs) {
+    return new Promise(function (resolve, reject) {
+      var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      var timer = setTimeout(function () {
+        if (controller) {
+          try { controller.abort(); } catch (err) { /* ignore */ }
+        }
+        reject(new Error('请求超时'));
+      }, timeoutMs);
+
+      fetch(url, {
+        cache: 'no-store',
+        signal: controller ? controller.signal : undefined
+      }).then(function (response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.json();
+      }).then(function (data) {
+        clearTimeout(timer);
+        resolve(data);
+      }).catch(function (err) {
+        clearTimeout(timer);
+        reject(err);
+      });
+    });
+  }
+
+  async function loadIp() {
+    var sources = [
+      { name: 'ipinfo.io', url: 'https://ipinfo.io/json' },
+      { name: 'ipify', url: 'https://api.ipify.org?format=json' }
+    ];
+
+    for (var i = 0; i < sources.length; i++) {
+      var source = sources[i];
+      try {
+        var data = await fetchJson(source.url, 6000);
+        if (!data || !data.ip) throw new Error('返回中没有 ip 字段');
+        app.ip = {
+          ip: String(data.ip),
+          city: data.city || '',
+          region: data.region || '',
+          country: data.country || '',
+          org: data.org || '',
+          source: source.name
+        };
+        app.ipStatus = 'ok';
+        renderIp();
+        renderSummary();
+        return;
+      } catch (err) {
+        console.warn('[variants] ' + source.name + ' 获取失败：', err && err.message ? err.message : err);
+      }
+    }
+
+    app.ipStatus = 'fail';
+    app.ip = null;
+    renderIp();
+    renderSummary();
+  }
+
+  function flashCopy(message, hint) {
+    clearTimeout(copyTimer);
+    setText(els.copyBtn, message);
+    setText(els.copyHint, hint);
+    copyTimer = setTimeout(function () {
+      setText(els.copyBtn, '复制结果');
+      setText(els.copyHint, '');
+    }, 2600);
+  }
+
+  async function copySummary() {
+    var text = els.summary.value;
+    var copied = false;
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        copied = true;
+      }
+    } catch (err) {
+      console.warn('[variants] clipboard.writeText 失败', err);
+    }
+
+    els.summary.focus();
+    try {
+      els.summary.select();
+      els.summary.setSelectionRange(0, text.length);
+    } catch (err) { /* ignore */ }
+
+    if (!copied) {
+      try {
+        copied = document.execCommand('copy');
+      } catch (err) {
+        copied = false;
+      }
+    }
+
+    if (copied) {
+      flashCopy('已复制', '结果已复制，可直接粘贴。');
+    } else {
+      flashCopy('已选中', '自动复制不可用，文本已全选，请长按手动复制。');
+    }
+  }
+
+  els.copyBtn.addEventListener('click', copySummary);
+
+  buildA();
+  buildB();
+  renderIp();
+  renderSummary();
+  startPreloadTicker();
+  console.log('[variants] 页面就绪：A ' + app.rowsA.length + ' 条，B ' + app.rowsB.length + ' 条 + 对照 1 条');
+  loadIp();
+})();
+</script>
+</body>
+</html>

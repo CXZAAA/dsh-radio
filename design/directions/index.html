@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSH 电台 · 两版风格首屏对比</title>
+<style>
+  :root{
+    --page:#0b0b0d; --frame:#151517; --line:#ffffff17; --line-soft:#ffffff0d;
+    --t1:#f4f5f6; --t2:#b6bbc1; --t3:#83888f; --t4:#5f646b;
+    --magenta:#FF4D9D;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-width:1520px;background:var(--page);color:var(--t1);
+    font-family:var(--font);-webkit-font-smoothing:antialiased;
+  }
+  .wrap{width:1520px;margin:0 auto;padding:30px 30px 34px}
+  header{display:flex;align-items:flex-end;gap:28px;padding-bottom:22px;border-bottom:1px solid var(--line-soft)}
+  .eyebrow{
+    font:10px/1 var(--mono);letter-spacing:.16em;color:var(--t4);
+    text-transform:uppercase;margin-bottom:12px;
+  }
+  h1{margin:0;font-size:21px;line-height:1.2;font-weight:600;letter-spacing:-.01em;color:var(--t1)}
+  h1 span{color:var(--t4);font-weight:400;margin:0 8px}
+  .sub{margin:9px 0 0;font-size:12.5px;line-height:20px;color:var(--t3);max-width:760px}
+  .meta{
+    margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:7px;
+    font:10.5px/1 var(--mono);color:var(--t4);white-space:nowrap;
+  }
+  .meta b{color:var(--t2);font-weight:500}
+  .meta .row{display:flex;align-items:center;gap:7px}
+  .meta .dot{width:4px;height:4px;border-radius:50%;background:#5686fe}
+
+  .grid{display:grid;grid-template-columns:720px 720px;gap:20px;margin-top:22px}
+  .card{min-width:0}
+  .card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;height:24px}
+  .tag{
+    width:20px;height:20px;flex:none;display:grid;place-items:center;border-radius:5px;
+    border:1px solid var(--line);background:#1a1a1d;color:var(--t2);
+    font:10.5px/1 var(--mono);font-weight:600;letter-spacing:.02em;
+  }
+  .card--c .tag{border-color:#ff4d9d40;background:#ff4d9d14;color:#ff8fc0}
+  .name{font-size:13px;font-weight:600;color:var(--t1);letter-spacing:.005em}
+  .name em{font-style:normal;color:var(--t4);font-weight:400;margin-left:7px;font-size:11.5px}
+  .cap{margin-left:auto;font:9.5px/1 var(--mono);color:var(--t4);letter-spacing:.02em}
+  .frame{
+    width:720px;height:450px;overflow:hidden;position:relative;
+    border:1px solid var(--line);border-radius:9px;background:var(--frame);
+    box-shadow:0 14px 40px #00000059;
+  }
+  .frame iframe{width:1440px;height:900px;border:0;display:block;transform:scale(.5);transform-origin:0 0}
+  .frame::after{
+    content:"";position:absolute;inset:0;border-radius:9px;pointer-events:none;
+    box-shadow:inset 0 1px 0 #ffffff0a;
+  }
+  .desc{margin:10px 0 0;font-size:11.5px;line-height:18px;color:var(--t3)}
+  .desc b{color:var(--t2);font-weight:500}
+  footer{
+    display:flex;align-items:center;gap:10px;margin-top:24px;padding-top:14px;
+    border-top:1px solid var(--line-soft);font:10px/1 var(--mono);color:var(--t4);letter-spacing:.02em;
+  }
+  footer .spacer{flex:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">DSH Radio / First Screen</div>
+      <h1>电台入口<span>·</span>两版风格首屏</h1>
+      <p class="sub">外壳、聊天与电台列表完全一致，唯一变量是电台控件的视觉语言。两版都是播放中 + 面板展开的主状态，入口位于 composer 下方状态行的第一个胶囊。</p>
+    </div>
+    <div class="meta">
+      <span>1440 × 900 · DARK</span>
+      <span class="row"><i class="dot"></i>播放中 · 面板展开</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="card card--b">
+      <div class="card-head">
+        <span class="tag">B</span>
+        <span class="name">静音条<em>Silent Strip</em></span>
+        <span class="cap">1440 × 900 · 50%</span>
+      </div>
+      <div class="frame"><iframe src="b.html" title="方向 B · 静音条" scrolling="no" tabindex="-1"></iframe></div>
+      <p class="desc">像标签页上的静音图标：<b>一个播放符号、一个台名、一条 2px 的 16 级灰度波形</b>，唯一颜色是播放时那颗 4px 蓝点。</p>
+    </section>
+
+    <section class="card card--c">
+      <div class="card-head">
+        <span class="tag">C</span>
+        <span class="name">霓虹刻度<em>Neon Scale</em></span>
+        <span class="cap">1440 × 900 · 50%</span>
+      </div>
+      <div class="frame"><iframe src="c.html" title="方向 C · 霓虹刻度" scrolling="no" tabindex="-1"></iframe></div>
+      <p class="desc">把 Nightride 的夜色收进 1px：<b>洋红状态点、青→洋红细线波形、暗一档的面板与一道渐变分割线</b>，无光晕、无光斑。</p>
+    </section>
+  </div>
+
+  <footer>
+    <span>两版并排 · 每帧 1440 × 900 按 50% 缩放</span>
+    <span class="spacer"></span>
+    <span>design/directions</span>
+  </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSH 电台 · 静音条</title>
+<style>
+/* =========================================================================
+   Design tokens — 抄自 dsh-client-ui-theme/lib/client.js 的 --dsw-* 定义
+   （设计平台 CSS 中 body 默认值 = 浅色，body[data-ds-dark-theme] = 深色）
+   圆角、字体栈同样来自 base.css。
+   浅色不是推断：文件里两套 alias 都有定义；仅“面板阴影强度 / 玻璃感”是推断。
+   ========================================================================= */
+:root{
+  --font-text: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+               "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-code: "SF Mono", "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", Menlo,
+               Courier, "PingFang SC", "Microsoft YaHei";
+  --font-mono-ui: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --radius-xs:4px; --radius-sm:8px; --radius-md:12px; --radius-lg:16px; --radius-xl:20px;
+  --ease: cubic-bezier(.4,0,.2,1);
+}
+
+/* 深色主题 —— 全部来自 DSH alias */
+html[data-theme="dark"]{
+  --bg-base:#151517;          /* neutral-bluish-950 */
+  --bg-l1:#232324;            /* neutral-bluish-875 */
+  --bg-l2:#2c2c2e;            /* neutral-bluish-850 */
+  --bg-l3:#353638;            /* neutral-bluish-800 */
+  --bg-panel:#2c2c2e;
+  --sidebar:#1b1b1c;          /* specific-sidebar-fill */
+  --nav-active:#43454a;       /* sidebar-nav-item-active */
+  --nav-hover:#2c2c2e;
+  --input:#2c2c2e;            /* specific-input-major */
+  --code-bg:#1b1b1c;          /* markdown-code-block */
+  --inline-code:#292929;
+  --border-l1:#ffffff0f;
+  --border-l2:#ffffff1f;
+  --border-l3:#ffffff29;
+  --border-l4:#ffffff33;
+  --label-1:#f9fafb;          /* neutral-bluish-50 */
+  --label-2:#cfd3d6;          /* neutral-bluish-300 */
+  --label-3:#adb2b8;          /* neutral-bluish-400 */
+  --label-4:#81858c;          /* neutral-bluish-600 */
+  --accent:#5686fe;           /* deepseek-450 */
+  --accent-strong:#4176e6;
+  --accent-soft:#5686fe1f;
+  --danger:#f25a5a;
+  --success:#22c55e;
+  --bubble:#5686fe17;
+  --btn-fill:#f9fafb;
+  --btn-text:#0f1115;
+  --shadow-panel: 0 24px 64px #00000073, 0 2px 10px #00000047;
+  --shadow-float: 0 10px 30px #00000059, 0 1px 2px #00000040;
+  --preview-a:#4176e6;
+  --preview-b:#7aaaff;
+}
+/* 浅色主题 —— DSH body 默认 alias（非推断） */
+html[data-theme="light"]{
+  --bg-base:#ffffff;
+  --bg-l1:#ffffff;
+  --bg-l2:#ffffff;
+  --bg-l3:#f9fafb;
+  --bg-panel:#ffffff;
+  --sidebar:#f9fafb;
+  --nav-active:#ebeef2;
+  --nav-hover:#f1f3f5;
+  --input:#ffffff;
+  --code-bg:#fafafa;
+  --inline-code:#f5f5f5;
+  --border-l1:#0000000a;
+  --border-l2:#0000001a;
+  --border-l3:#0000001f;
+  --border-l4:#00000029;
+  --label-1:#0f1115;
+  --label-2:#61666b;
+  --label-3:#81858c;
+  --label-4:#adb2b8;
+  --accent:#4176e6;
+  --accent-strong:#2563eb;
+  --accent-soft:#4176e614;
+  --danger:#ec1313;
+  --success:#22c55e;
+  --bubble:#edf3fe;
+  --btn-fill:#0f1115;
+  --btn-text:#ffffff;
+  --shadow-panel: 0 20px 50px #0f111526, 0 2px 8px #0f111514; /* 推断：浅色阴影强度 */
+  --shadow-float: 0 6px 20px #0f11151f, 0 1px 2px #0f11150f;
+  --preview-a:#4176e6;
+  --preview-b:#93c5fd;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{
+  margin:0;background:var(--bg-base);color:var(--label-1);
+  font-family:var(--font-text);font-size:14px;line-height:22px;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+::selection{background:var(--accent-soft)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--border-l3);border:3px solid transparent;background-clip:padding-box;border-radius:8px}
+::-webkit-scrollbar-track{background:transparent}
+.icon{width:16px;height:16px;display:block;flex:none}
+.icon-sm{width:14px;height:14px}
+.spacer{flex:1 1 auto}
+
+/* ============================== APP SHELL ============================== */
+.app{height:100vh;display:flex;flex-direction:column;background:var(--bg-base);color:var(--label-1)}
+.shell{
+  flex:1 1 auto;min-height:0;position:relative;
+  display:grid;grid-template-rows:48px minmax(0,1fr) auto;
+}
+.topbar{
+  display:flex;align-items:center;gap:10px;padding:0 14px;
+  border-bottom:1px solid var(--border-l1);background:var(--bg-base);position:relative;z-index:5;
+}
+.brand{
+  width:22px;height:22px;border-radius:7px;background:var(--label-1);color:var(--bg-base);
+  display:grid;place-items:center;flex:none;
+}
+.brand svg{width:13px;height:13px}
+.title-block{display:flex;align-items:baseline;gap:9px;min-width:0}
+.title-block strong{font-size:13px;font-weight:600;letter-spacing:-.005em;color:var(--label-1);white-space:nowrap}
+.title-block span{font-size:11px;color:var(--label-4);white-space:nowrap}
+.topline{width:1px;height:16px;background:var(--border-l2);margin:0 3px}
+.topbar-right{display:flex;align-items:center;gap:2px}
+.icon-btn{
+  width:28px;height:28px;border-radius:7px;border:0;background:transparent;color:var(--label-3);
+  display:grid;place-items:center;transition:background .15s var(--ease),color .15s var(--ease);
+}
+.icon-btn:hover{background:var(--nav-hover);color:var(--label-1)}
+.icon-btn.on{background:var(--nav-active);color:var(--label-1)}
+.avatar{
+  width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;
+  display:grid;place-items:center;font-size:10px;font-weight:650;margin-left:6px;
+  border:1px solid var(--border-l2);
+}
+
+/* ============================== COLUMNS ============================== */
+.cols{display:grid;grid-template-columns:260px minmax(0,1fr) 320px;min-height:0;position:relative}
+
+/* ------------------------------ SIDEBAR ------------------------------ */
+.sidebar{
+  background:var(--sidebar);border-right:1px solid var(--border-l1);
+  display:flex;flex-direction:column;min-height:0;padding:10px 10px 8px;
+}
+.search{
+  height:32px;display:flex;align-items:center;gap:7px;padding:0 9px;border-radius:8px;
+  background:var(--nav-hover);border:1px solid transparent;color:var(--label-4);
+}
+.search svg{width:14px;height:14px;flex:none}
+.search input{
+  border:0;outline:0;background:transparent;min-width:0;flex:1;font-size:12px;color:var(--label-1);
+  padding:0;
+}
+.search input::placeholder{color:var(--label-4)}
+.search kbd{
+  font:10px/1 var(--font-text);color:var(--label-4);border:1px solid var(--border-l2);
+  border-radius:4px;padding:2px 4px;background:var(--bg-base);
+}
+.new-chat{
+  margin-top:8px;height:32px;border:0;border-radius:8px;background:var(--btn-fill);color:var(--btn-text);
+  display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;font-weight:600;
+  transition:opacity .15s var(--ease);
+}
+.new-chat:hover{opacity:.88}
+.new-chat svg{width:14px;height:14px}
+.side-scroll{flex:1 1 auto;min-height:0;overflow:auto;margin:0 -4px;padding:0 4px}
+.side-label{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:10.5px;color:var(--label-4);letter-spacing:.03em;margin:16px 8px 5px;
+}
+.side-label b{font-weight:500;color:var(--label-4)}
+.session{
+  width:100%;display:flex;align-items:center;gap:9px;border:0;background:transparent;text-align:left;
+  padding:7px 8px;border-radius:8px;color:var(--label-2);margin-bottom:1px;position:relative;
+}
+.session:hover{background:var(--nav-hover)}
+.session.active{background:var(--nav-active);color:var(--label-1)}
+.session .s-ic{width:16px;height:16px;flex:none;color:var(--label-4)}
+.session.active .s-ic{color:var(--label-2)}
+.session .s-text{min-width:0;flex:1}
+.session .s-title{display:block;font-size:12.5px;line-height:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.session .s-meta{display:block;font-size:10.5px;line-height:15px;color:var(--label-4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.session .s-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex:none;opacity:0}
+.session.active .s-dot{opacity:1}
+.side-foot{border-top:1px solid var(--border-l1);padding-top:6px;margin-top:6px}
+.foot-row{
+  width:100%;height:30px;display:flex;align-items:center;gap:8px;padding:0 8px;border:0;border-radius:7px;
+  background:transparent;color:var(--label-3);font-size:11.5px;text-align:left;
+}
+.foot-row:hover{background:var(--nav-hover);color:var(--label-1)}
+.foot-row svg{width:14px;height:14px}
+.foot-row .kbd{margin-left:auto;font-size:10px;color:var(--label-4)}
+
+/* ------------------------------ CHAT ------------------------------ */
+.chat{display:flex;flex-direction:column;min-height:0;background:var(--bg-base);min-width:0}
+.messages{flex:1 1 auto;min-height:0;overflow:auto;padding:18px 28px 6px}
+.thread{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:9px;min-width:0}
+.msg .m-avatar{
+  width:24px;height:24px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:var(--bg-l2);border:1px solid var(--border-l2);color:var(--label-2);
+  font-size:9.5px;font-weight:700;margin-top:1px;
+}
+.msg.user{justify-content:flex-end}
+.msg.user .bubble{
+  max-width:78%;background:var(--bubble);border:1px solid color-mix(in srgb, var(--accent) 10%, transparent);
+  border-radius:12px 12px 4px 12px;padding:7px 11px;font-size:13px;line-height:20px;color:var(--label-1);
+}
+.m-body{min-width:0;flex:1}
+.m-head{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.m-name{font-size:12px;font-weight:600;color:var(--label-1)}
+.m-model{font-size:10.5px;color:var(--label-4)}
+.m-time{font-size:10.5px;color:var(--label-4);margin-left:auto}
+.m-text{font-size:13px;line-height:21px;color:var(--label-2);margin:0}
+.m-text + .m-text{margin-top:5px}
+.m-text strong{color:var(--label-1);font-weight:600}
+
+.tool-card{
+  margin-top:9px;border:1px solid var(--border-l2);border-radius:10px;background:var(--bg-l1);overflow:hidden;
+}
+.tool-head{height:32px;display:flex;align-items:center;gap:7px;padding:0 10px;border-bottom:1px solid var(--border-l1)}
+.tool-head .t-name{font-size:11px;font-weight:600;color:var(--label-2)}
+.tool-head .t-path{
+  font:10.5px/1 var(--font-code);color:var(--label-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
+}
+.tool-head .t-state{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--label-4);flex:none}
+.t-dot{width:5px;height:5px;border-radius:50%;background:var(--success)}
+.tool-body{padding:8px 11px;display:flex;align-items:center;gap:10px;background:var(--bg-l1)}
+.tool-body .t-lines{font:10.5px/1.6 var(--font-code);color:var(--label-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-code{display:flex;flex-direction:column;gap:3px;margin-left:auto;flex:none}
+.mini-code i{display:block;height:3px;border-radius:2px;background:var(--border-l3)}
+.mini-code i:nth-child(1){width:56px;background:color-mix(in srgb, var(--accent) 42%, transparent)}
+.mini-code i:nth-child(2){width:38px}
+.mini-code i:nth-child(3){width:47px}
+
+.code-block{margin-top:9px;border:1px solid var(--border-l2);border-radius:10px;background:var(--code-bg);overflow:hidden}
+.code-head{height:29px;display:flex;align-items:center;gap:7px;padding:0 10px;border-bottom:1px solid var(--border-l1)}
+.code-head .lang{font:10px/1 var(--font-code);color:var(--label-3);letter-spacing:.04em;text-transform:uppercase}
+.code-head .file{font:10px/1 var(--font-code);color:var(--label-4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.code-head .copy{margin-left:auto;color:var(--label-4);display:grid;place-items:center;border:0;background:transparent;padding:4px;border-radius:4px}
+.code-head .copy:hover{background:var(--nav-hover);color:var(--label-2)}
+.code-block pre{margin:0;padding:8px 12px 9px;overflow:hidden;font:11px/18px var(--font-code);color:var(--label-2)}
+.code-block .ln{color:var(--label-4);user-select:none;display:inline-block;width:16px}
+.code-block .sel{color:#e4edfd}
+.code-block .prop{color:#93c5fd}
+.code-block .val{color:#b7c8fe}
+.code-block .punc{color:var(--label-4)}
+html[data-theme="light"] .code-block .sel{color:#1e40af}
+html[data-theme="light"] .code-block .prop{color:#2563eb}
+html[data-theme="light"] .code-block .val{color:#4176e6}
+
+.composer-wrap{flex:none;padding:8px 28px 16px}
+.composer{
+  max-width:760px;margin:0 auto;background:var(--input);border:1px solid var(--border-l2);border-radius:16px;
+  padding:9px 10px 7px;box-shadow:0 1px 2px #0000000a;transition:border-color .15s var(--ease);
+}
+.composer:focus-within{border-color:var(--border-l4)}
+.composer textarea{
+  width:100%;border:0;outline:0;background:transparent;resize:none;display:block;
+  font-size:13px;line-height:20px;color:var(--label-1);padding:2px 3px;min-height:22px;max-height:90px;
+}
+.composer textarea::placeholder{color:var(--label-4)}
+.composer-row{display:flex;align-items:center;gap:6px;margin-top:5px}
+.model-chip{
+  height:24px;display:flex;align-items:center;gap:5px;padding:0 7px;border:1px solid var(--border-l2);
+  border-radius:7px;background:var(--bg-base);font-size:11px;color:var(--label-2);
+}
+.model-chip svg{width:12px;height:12px;color:var(--accent)}
+.model-chip .dim{color:var(--label-4);font-size:10px}
+.model-chip .chev{color:var(--label-4);font-size:8px;margin-left:1px}
+.attach-btn{width:24px;height:24px;border:0;background:transparent;border-radius:6px;color:var(--label-4);display:grid;place-items:center}
+.attach-btn:hover{background:var(--nav-hover);color:var(--label-2)}
+.send-btn{
+  width:28px;height:28px;border:0;border-radius:50%;background:var(--btn-fill);color:var(--btn-text);
+  display:grid;place-items:center;margin-left:4px;
+}
+.send-btn:hover{opacity:.9}
+.send-btn svg{width:14px;height:14px}
+.composer-hint{
+  max-width:760px;margin:5px auto 0;display:flex;justify-content:space-between;
+  font-size:10px;color:var(--label-4);padding:0 4px;
+}
+
+/* ------------------------------ FILES PANEL ------------------------------ */
+.files{
+  border-left:1px solid var(--border-l1);background:var(--bg-base);display:flex;flex-direction:column;min-height:0;
+}
+.files-head{
+  height:42px;display:flex;align-items:center;gap:7px;padding:0 12px;border-bottom:1px solid var(--border-l1);flex:none;
+}
+.files-head .ftitle{font-size:12px;font-weight:600;color:var(--label-1)}
+.files-head .fcount{font-size:10.5px;color:var(--label-4);background:var(--nav-hover);border-radius:4px;padding:1px 5px}
+.files-head .icon-btn{width:24px;height:24px;margin-left:auto}
+.files-head .icon-btn + .icon-btn{margin-left:0}
+.file-scroll{flex:1 1 auto;min-height:0;overflow:auto;padding:8px}
+.fsection{font-size:10px;color:var(--label-4);letter-spacing:.04em;margin:5px 6px 5px;text-transform:uppercase}
+.file{
+  display:flex;align-items:center;gap:8px;padding:6px 7px;border-radius:7px;color:var(--label-2);min-width:0;
+}
+.file:hover{background:var(--nav-hover)}
+.file.active{background:var(--nav-active);color:var(--label-1)}
+.file .f-ic{width:14px;height:14px;flex:none;color:var(--label-4)}
+.file.active .f-ic{color:var(--accent)}
+.file .f-main{min-width:0;flex:1}
+.file .f-name{display:block;font-size:11.5px;line-height:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file .f-path{display:block;font:9.5px/14px var(--font-code);color:var(--label-4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file .f-badge{font:9px/1 var(--font-code);color:var(--label-4);border:1px solid var(--border-l2);border-radius:3px;padding:2px 3px;flex:none}
+.file .f-badge.m{color:#f7ad31;border-color:#f7ad3140}
+.preview-wrap{padding:4px 6px 0}
+.preview-card{
+  border:1px solid var(--border-l2);border-radius:10px;overflow:hidden;background:var(--bg-l1);
+}
+.preview-top{height:26px;display:flex;align-items:center;gap:4px;padding:0 8px;border-bottom:1px solid var(--border-l1);background:var(--bg-l3)}
+.preview-top .pd{width:5px;height:5px;border-radius:50%;background:var(--border-l4)}
+.preview-top .purl{font:9px/1 var(--font-code);color:var(--label-4);margin-left:5px}
+.preview-thumb{height:128px;position:relative;background:
+  radial-gradient(120% 90% at 72% 0%, color-mix(in srgb,var(--accent) 14%, transparent), transparent 60%),
+  var(--bg-base);
+  overflow:hidden;padding:8px;display:grid;grid-template-columns:22% 1fr 25%;gap:5px;
+}
+.pt-bar{position:absolute;left:0;right:0;top:0;height:9px;border-bottom:1px solid var(--border-l1);background:color-mix(in srgb,var(--bg-l1) 82%, transparent)}
+.pt-side,.pt-main,.pt-files{border-radius:4px;background:color-mix(in srgb,var(--bg-l1) 74%, transparent);border:1px solid var(--border-l1);margin-top:6px;position:relative;overflow:hidden}
+.pt-side::before,.pt-main::before,.pt-files::before{content:"";position:absolute;inset:5px;background:
+  repeating-linear-gradient(to bottom, var(--border-l3) 0 2px, transparent 2px 6px);opacity:.7}
+.pt-main::before{inset:6px 8px;opacity:.5}
+.pt-main::after{content:"";position:absolute;left:8px;right:8px;bottom:7px;height:12px;border-radius:3px;background:var(--accent);opacity:.85}
+.pt-files::before{opacity:.45}
+.preview-cap{display:flex;align-items:center;gap:6px;padding:6px 8px;border-top:1px solid var(--border-l1);font:9.5px/1 var(--font-code);color:var(--label-4)}
+.preview-cap .spacer{flex:1}
+.diff-add{color:var(--success)}
+.diff-del{color:var(--danger)}
+.files-foot{
+  flex:none;border-top:1px solid var(--border-l1);padding:8px 12px;display:flex;align-items:center;gap:6px;
+  font-size:10px;color:var(--label-4);
+}
+.files-foot .st{width:5px;height:5px;border-radius:50%;background:var(--success)}
+
+
+/* ============================== DOCK ROW ==============================
+   与真实 DSH conversation.composer.dock 同构：24px 一行 list 槽位。
+   第一个胶囊是电台，后面两个是 activity / usage pill。三者同高对齐。
+   ==================================================================== */
+.status-row{
+  display:flex;align-items:center;gap:6px;max-width:760px;margin:6px auto 0;padding:0 2px;min-height:24px;
+}
+.dock-pill{
+  height:24px;display:inline-flex;align-items:center;gap:5px;padding:0 9px;flex:none;
+  border:1px solid var(--border-l1);border-radius:999px;background:var(--bg-l1);
+  color:var(--label-4);font-size:11px;line-height:1;white-space:nowrap;
+}
+.dock-pill svg{width:11px;height:11px;flex:none;color:var(--label-4)}
+.dock-pill .dock-k{color:var(--label-3);font-variant-numeric:tabular-nums}
+
+
+/* =========================================================================
+   方向 B · 静音条 Silent Strip
+   北极星：像标签页上的静音图标 —— 安静到几乎不存在，只在需要时被看见。
+   只用 DSH 的 label 层级与背景层级；唯一的强调色是播放态那颗 4px 蓝点。
+   ========================================================================= */
+.radio-b{position:relative;z-index:60;flex:none;display:flex;align-items:center;font-family:var(--font-text);color:var(--label-1)}
+.bar-b{
+  height:24px;display:inline-flex;align-items:center;gap:7px;padding:0 9px 0 8px;
+  border:1px solid var(--border-l1);border-radius:999px;background:var(--bg-l1);
+  color:var(--label-3);font:inherit;cursor:pointer;white-space:nowrap;
+  transition:background .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease);
+}
+/* hover / 展开（选中）/ 播放 三态：底色 → 边框 → 文字亮度逐级递增，不引入新色 */
+.bar-b:hover{background:var(--bg-l2);border-color:var(--border-l2);color:var(--label-2)}
+.radio-b[data-expanded="true"] .bar-b{background:var(--bg-l3);border-color:var(--border-l3);color:var(--label-2)}
+.radio-b[data-expanded="true"] .bar-b:hover{background:var(--bg-l3);border-color:var(--border-l3)}
+.b-play{width:10px;height:10px;flex:none;color:var(--label-4);transition:color .15s var(--ease)}
+.radio-b[data-state="playing"] .b-play{color:var(--label-2)}
+.b-name{
+  font-size:11px;line-height:1;font-weight:500;letter-spacing:.005em;color:var(--label-3);
+  display:inline-block;min-width:var(--name-w,60px);
+}
+.radio-b[data-state="playing"] .b-name{color:var(--label-2)}
+/* 2px 高、16 级灰度的极细波形；无彩色、无圆角 */
+.b-wave{width:56px;height:2px;flex:none;margin-left:2px;color:var(--label-2);opacity:0;transition:opacity .18s var(--ease)}
+.radio-b[data-state="playing"] .b-wave{opacity:.92}
+.b-dot{
+  width:4px;height:4px;border-radius:50%;background:var(--accent);flex:none;margin-left:1px;
+  opacity:0;transition:opacity .2s var(--ease);
+}
+.radio-b[data-state="playing"] .b-dot{opacity:1}
+/* 动效：旧台名淡出 120ms、新台名淡入 180ms；外层用 --name-w 预留宽度，切台时宽度不跳 */
+.b-name.lbl-out{animation:strip-out 120ms var(--ease) forwards}
+.b-name.lbl-in{animation:strip-in 180ms var(--ease) both}
+@keyframes strip-out{from{opacity:1}to{opacity:0}}
+@keyframes strip-in{from{opacity:0}to{opacity:1}}
+
+/* 面板：向上弹出，纯文本列表 */
+.panel-b{
+  position:absolute;left:0;bottom:calc(100% + 6px);width:360px;
+  background:var(--bg-l1);border:1px solid var(--border-l2);border-radius:12px;
+  box-shadow:var(--shadow-float);padding:0 0 6px;z-index:70;
+  opacity:0;transform:translateY(3px);pointer-events:none;
+  transition:opacity .16s var(--ease),transform .16s var(--ease);
+}
+.radio-b[data-expanded="true"] .panel-b{opacity:1;transform:none;pointer-events:auto}
+.pb-head{
+  height:32px;display:flex;align-items:center;gap:8px;padding:0 14px 0 17px;
+  border-bottom:1px solid var(--border-l1);
+}
+.pb-kicker{font-size:11px;line-height:1;color:var(--label-4);letter-spacing:.02em;flex:none}
+.pb-head .pb-now{font-size:11px;line-height:1;font-weight:500;color:var(--label-1)}
+.pb-head .pb-head-src{margin-left:auto;font-size:10px;line-height:1;color:var(--label-4);letter-spacing:.01em}
+.pb-list{list-style:none;margin:0;padding:4px 0 0}
+/* 行高 28px；当前行只用左侧 2px 竖线，不给底色块 */
+.pb-row{
+  position:relative;display:flex;align-items:center;gap:10px;height:28px;padding:0 14px 0 17px;
+  color:var(--label-3);transition:background .12s var(--ease),color .12s var(--ease);
+}
+.pb-row::before{
+  content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;border-radius:1px;
+  background:transparent;
+}
+.pb-row:hover{background:var(--nav-hover);color:var(--label-2)}
+.pb-row.is-current{color:var(--label-1)}
+.pb-row.is-current::before{background:var(--label-3)}
+.pb-name{font-size:11.5px;line-height:1;font-weight:450;letter-spacing:.005em;white-space:nowrap}
+.pb-row.is-current .pb-name{font-weight:550}
+.pb-row-src{margin-left:auto;font-size:10px;line-height:1;color:var(--label-4);letter-spacing:.01em;white-space:nowrap}
+.pb-row.is-current .pb-row-src{color:var(--label-3)}
+
+</style>
+</head>
+<body>
+<div class="app" id="app" data-theme="dark">
+  <div class="shell" id="shell">
+    <!-- 顶栏 -->
+    <header class="topbar">
+      <div class="brand" aria-hidden="true">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M3 3.5h6.2c2.4 0 4.1 1.9 4.1 4.5s-1.7 4.5-4.1 4.5H3V3.5Z" stroke="currentColor" stroke-width="1.7"/><path d="M6.2 6.2v3.6" stroke="currentColor" stroke-width="1.7"/></svg>
+      </div>
+      <div class="title-block">
+        <strong>DSH 电台</strong>
+        <span>dsh 电台 / main</span>
+      </div>
+      <span class="topline"></span>
+      <div class="topbar-right" style="margin-left:auto">
+        <button class="icon-btn" title="搜索"><svg class="icon" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.2" stroke="currentColor" stroke-width="1.4"/><path d="m10.2 10.2 3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        <button class="icon-btn" title="预览面板"><svg class="icon" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M6.2 3v10" stroke="currentColor" stroke-width="1.3"/></svg></button>
+        <button class="icon-btn" title="主题"><svg class="icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.3"/><path d="M8 1.6v1.5M8 12.9v1.5M1.6 8h1.5M12.9 8h1.5M3.5 3.5l1 1M11.5 11.5l1 1M12.5 3.5l-1 1M4.5 11.5l-1 1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
+        <button class="icon-btn" title="设置"><svg class="icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.1" stroke="currentColor" stroke-width="1.3"/><path d="M8 1.9v1.4M8 12.7v1.4M1.9 8h1.4M12.7 8h1.4M3.7 3.7l1 1M11.3 11.3l1 1M12.3 3.7l-1 1M4.7 11.3l-1 1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
+        <span class="avatar">H</span>
+      </div>
+    </header>
+
+    <div class="cols">
+      <!-- 左栏 -->
+      <aside class="sidebar">
+        <div class="search">
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.2" stroke="currentColor" stroke-width="1.4"/><path d="m10.2 10.2 3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <input placeholder="搜索会话" aria-label="搜索会话">
+          <kbd>⌘K</kbd>
+        </div>
+        <button class="new-chat">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          新会话
+        </button>
+
+        <div class="side-scroll">
+          <div class="side-label"><span>今天</span><b>2</b></div>
+          <button class="session active">
+            <svg class="s-ic" viewBox="0 0 16 16" fill="none"><path d="M3 4.2h10v7.6H3z" stroke="currentColor" stroke-width="1.2"/><path d="M5.2 6.6h5.6M5.2 9.1h3.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span class="s-text"><span class="s-title">电台入口放哪儿</span><span class="s-meta">现在 · 12 条消息</span></span>
+            <span class="s-dot"></span>
+          </button>
+          <button class="session">
+            <svg class="s-ic" viewBox="0 0 16 16" fill="none"><path d="M3 3.5h10v9H3z" stroke="currentColor" stroke-width="1.2"/><path d="M5 6h6M5 8.4h6M5 10.8h3.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span class="s-text"><span class="s-title">插件可行性调研</span><span class="s-meta">今天 18:42 · 8 条</span></span>
+          </button>
+
+          <div class="side-label"><span>昨天</span><b>3</b></div>
+          <button class="session">
+            <svg class="s-ic" viewBox="0 0 16 16" fill="none"><path d="m3 4 4.5 4L3 12M8.5 4 13 8l-4.5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="s-text"><span class="s-title">probe 服务排查</span><span class="s-meta">昨天 22:10</span></span>
+          </button>
+          <button class="session">
+            <svg class="s-ic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="4.8" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3.2l2 1.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span class="s-text"><span class="s-title">主题变量抄录</span><span class="s-meta">昨天 16:03</span></span>
+          </button>
+          <button class="session">
+            <svg class="s-ic" viewBox="0 0 16 16" fill="none"><path d="M4 3h8v10H4z" stroke="currentColor" stroke-width="1.2"/><path d="M6 6h4M6 8.5h4M6 11h2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span class="s-text"><span class="s-title">Composer 插槽调研</span><span class="s-meta">昨天 11:28</span></span>
+          </button>
+
+          <div class="side-label"><span>更早</span><b>2</b></div>
+          <button class="session">
+            <svg class="s-ic" viewBox="0 0 16 16" fill="none"><path d="M2.8 5.2 8 2.8l5.2 2.4L8 7.6 2.8 5.2Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M2.8 8.2 8 10.6l5.2-2.4M2.8 11.2 8 13.6l5.2-2.4" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+            <span class="s-text"><span class="s-title">Nightride 流地址探测</span><span class="s-meta">周三 · 5 条</span></span>
+          </button>
+          <button class="session">
+            <svg class="s-ic" viewBox="0 0 16 16" fill="none"><path d="M3 3.5h10v9H3z" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 6.2h5M5.5 9.8h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span class="s-text"><span class="s-title">界面截图基线</span><span class="s-meta">周二 · 3 条</span></span>
+          </button>
+        </div>
+
+        <div class="side-foot">
+          <button class="foot-row">
+            <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.2"/><path d="M8 1.8v1.5M8 12.7v1.5M1.8 8h1.5M12.7 8h1.5M3.5 3.5l1.1 1.1M11.4 11.4l1.1 1.1M12.5 3.5l-1.1 1.1M4.6 11.4l-1.1 1.1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            设置 <span class="kbd">⌘,</span>
+          </button>
+          <button class="foot-row">
+            <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M6.4 6.3a1.7 1.7 0 1 1 2.4 1.55c-.5.25-.8.65-.8 1.15v.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".8" fill="currentColor"/></svg>
+            帮助与快捷键
+          </button>
+        </div>
+      </aside>
+
+      <!-- 中间聊天 -->
+      <main class="chat">
+        <div class="messages">
+          <div class="thread">
+            <div class="msg user">
+              <div class="bubble">先做个视觉原型看看：电台入口放底栏、输入框下、右下角悬浮，哪个更像 DSH？</div>
+            </div>
+
+            <div class="msg">
+              <div class="m-avatar">DS</div>
+              <div class="m-body">
+                <div class="m-head"><span class="m-name">DSH</span><span class="m-model">Astra 6 · max</span><span class="m-time">22:24</span></div>
+                <p class="m-text">三个位置都做进同一个单文件原型了，切换只影响投放点，播放状态和面板共用一套。底栏最克制：不挤压聊天宽度，播放时才占 60px。</p>
+                <p class="m-text">配色直接抄了 <strong>--dsw-*</strong> 的 alias，深色和浅色都是文件里现成的，没有自己发明主题。</p>
+
+                <div class="tool-card">
+                  <div class="tool-head">
+                    <svg class="icon-sm" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="8" y="8" width="5.5" height="5.5" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
+                    <span class="t-name">Read</span>
+                    <span class="t-path">prototype/index.html</span>
+                    <span class="t-state"><i class="t-dot"></i>完成 · 12ms</span>
+                  </div>
+                  <div class="tool-body">
+                    <span class="t-lines">1,284 行 · 61.2 KB · UTF-8</span>
+                    <span class="mini-code" aria-hidden="true"><i></i><i></i><i></i></span>
+                  </div>
+                </div>
+
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="lang">css</span><span class="file">theme-tokens.css</span>
+                    <button class="copy" title="复制"><svg class="icon-sm" viewBox="0 0 16 16" fill="none"><rect x="5.2" y="5.2" width="7.6" height="7.6" rx="1.3" stroke="currentColor" stroke-width="1.2"/><path d="M10.2 5.2V4.3c0-.6-.5-1.1-1.1-1.1H4.3c-.6 0-1.1.5-1.1 1.1v4.8c0 .6.5 1.1 1.1 1.1h.9" stroke="currentColor" stroke-width="1.2"/></svg></button>
+                  </div>
+                  <pre><span class="ln">1</span><span class="sel">:root</span> <span class="punc">{</span>
+<span class="ln">2</span>  <span class="prop">--dsw-alias-bg-base</span><span class="punc">:</span> <span class="val">#151517</span><span class="punc">;</span>
+<span class="ln">3</span>  <span class="prop">--dsw-alias-label-primary</span><span class="punc">:</span> <span class="val">#f9fafb</span><span class="punc">;</span>
+<span class="ln">4</span>  <span class="prop">--dsw-alias-border-l2</span><span class="punc">:</span> <span class="val">#ffffff1f</span><span class="punc">;</span>
+<span class="ln">5</span>  <span class="prop">--dsw-radius-lg</span><span class="punc">:</span> <span class="val">16px</span><span class="punc">;</span>
+<span class="ln">6</span>  <span class="prop">--dsw-font-family</span><span class="punc">:</span> <span class="val">-apple-system, …</span><span class="punc">;</span>
+<span class="ln">7</span><span class="punc">}</span></pre>
+                </div>
+
+                <p class="m-text" style="margin-top:8px">先看 V1 底栏，面板点开有 7 个电台，三个是真实直播流。字体 A/B/C 在顶部 DEV 条里切。</p>
+              </div>
+            </div>
+
+            <div class="msg user">
+              <div class="bubble">字体 B 的等宽会不会太像终端？还是 A 更稳？</div>
+            </div>
+
+            <div class="msg">
+              <div class="m-avatar">DS</div>
+              <div class="m-body">
+                <div class="m-head"><span class="m-name">DSH</span><span class="m-model">Astra 6 · max</span><span class="m-time">22:25</span></div>
+                <p class="m-text">B 只把台名和数字换成等宽，其余仍是 DSH 的原生层；所以不会整体变终端，但台名会更“器材感”。A 最不容易抢戏，建议先按 A 讨论，B 留作电台自己的识别度备选。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="composer-wrap">
+          <div class="composer">
+            <textarea rows="1" placeholder="给 DSH 发送消息…"></textarea>
+            <div class="composer-row">
+              <div class="model-chip">
+                <svg viewBox="0 0 16 16" fill="none"><path d="m8 2 1.5 4.3L14 8l-4.5 1.7L8 14l-1.5-4.3L2 8l4.5-1.7L8 2Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+                Astra 6 <span class="dim">max</span><span class="chev">▾</span>
+              </div>
+              <button class="attach-btn" title="附件"><svg class="icon-sm" viewBox="0 0 16 16" fill="none"><path d="m10.8 5.2-4.6 4.6a1.8 1.8 0 0 0 2.5 2.5l4.4-4.4a3 3 0 0 0-4.2-4.2L4 8.6a4.2 4.2 0 0 0 6 6l3.4-3.4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg></button>
+              <span class="spacer"></span>
+              <button class="send-btn" title="发送"><svg viewBox="0 0 16 16" fill="none"><path d="M8 12.5v-9M4.2 7.3 8 3.5l3.8 3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+          </div>
+          <!-- V2 投放点：conversation.composer.dock -->
+          <!-- V4 投放点：状态行 list 槽位（模拟 activity / usage pill 并排） -->
+          <div class="status-row">
+            <div class="radio-b" data-state="playing" data-expanded="true">
+            <div class="panel-b" role="dialog" aria-label="电台面板">
+              <div class="pb-head">
+                <span class="pb-kicker">正在播放</span>
+                <span class="pb-now">ChillSynth</span>
+                <span class="pb-head-src">Nightride FM</span>
+              </div>
+              <ul class="pb-list">
+                <li class="pb-row is-current"><span class="pb-name">ChillSynth</span><span class="pb-row-src">Nightride FM</span></li><li class="pb-row"><span class="pb-name">Nightride</span><span class="pb-row-src">Nightride FM</span></li><li class="pb-row"><span class="pb-name">Darksynth</span><span class="pb-row-src">Nightride FM</span></li><li class="pb-row"><span class="pb-name">Spacesynth</span><span class="pb-row-src">Nightride FM</span></li><li class="pb-row"><span class="pb-name">Main Mix</span><span class="pb-row-src">Radio Paradise</span></li><li class="pb-row"><span class="pb-name">Mellow Mix</span><span class="pb-row-src">Radio Paradise</span></li><li class="pb-row"><span class="pb-name">EVE Radio</span><span class="pb-row-src">GamingNow</span></li>
+              </ul>
+            </div>
+            <button class="bar-b" type="button" aria-expanded="true" aria-label="电台：ChillSynth，播放中">
+              <svg class="b-play" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.4 3.6v8.8l7-4.4-7-4.4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+              <span class="b-name">ChillSynth</span>
+              <svg class="b-wave" viewBox="0 0 56 2" preserveAspectRatio="none" aria-hidden="true"><g fill="currentColor"><rect x="0.0" y="0" width="2" height="2" opacity="0.18"/><rect x="3.5" y="0" width="2" height="2" opacity="0.24"/><rect x="7.0" y="0" width="2" height="2" opacity="0.3"/><rect x="10.5" y="0" width="2" height="2" opacity="0.4"/><rect x="14.0" y="0" width="2" height="2" opacity="0.5"/><rect x="17.5" y="0" width="2" height="2" opacity="0.62"/><rect x="21.0" y="0" width="2" height="2" opacity="0.74"/><rect x="24.5" y="0" width="2" height="2" opacity="0.88"/><rect x="28.0" y="0" width="2" height="2" opacity="0.96"/><rect x="31.5" y="0" width="2" height="2" opacity="0.84"/><rect x="35.0" y="0" width="2" height="2" opacity="0.7"/><rect x="38.5" y="0" width="2" height="2" opacity="0.58"/><rect x="42.0" y="0" width="2" height="2" opacity="0.46"/><rect x="45.5" y="0" width="2" height="2" opacity="0.36"/><rect x="49.0" y="0" width="2" height="2" opacity="0.28"/><rect x="52.5" y="0" width="2" height="2" opacity="0.22"/></g></svg>
+              <span class="b-dot" aria-hidden="true"></span>
+            </button>
+          </div>
+            <span class="dock-pill">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M3 11.5h2V8H3v3.5ZM7 11.5h2V5H7v6.5ZM11 11.5h2V2.5h-2v9Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+              <span>12 轮 49 步 · <span class="dock-k">157 tok/s</span></span>
+            </span>
+            <span class="dock-pill">
+              <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.4" stroke="currentColor" stroke-width="1.2"/><path d="M8 4.8V8l2.4 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+              <span><span class="dock-k">3.4M tok</span> · 缓存命中 <span class="dock-k">98%</span></span>
+            </span>
+          </div>
+          <div class="composer-hint"><span>Enter 发送 · Shift+Enter 换行</span></div>
+        </div>
+      </main>
+
+      <!-- 右栏 -->
+      <aside class="files">
+        <div class="files-head">
+          <span class="ftitle">上下文</span><span class="fcount">5</span>
+          <button class="icon-btn" title="添加文件"><svg class="icon-sm" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+          <button class="icon-btn" title="更多"><svg class="icon-sm" viewBox="0 0 16 16" fill="currentColor"><circle cx="3.2" cy="8" r="1.1"/><circle cx="8" cy="8" r="1.1"/><circle cx="12.8" cy="8" r="1.1"/></svg></button>
+        </div>
+        <div class="file-scroll">
+          <div class="fsection">最近打开</div>
+          <div class="file active">
+            <svg class="f-ic" viewBox="0 0 16 16" fill="none"><path d="M4 2.5h5l3 3v8H4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="m6 8-1.4 2h1.7l-1 2.1 2.8-2.6H6.8L8 8H6Z" fill="currentColor"/></svg>
+            <span class="f-main"><span class="f-name">index.html</span><span class="f-path">prototype/</span></span>
+            <span class="f-badge m">M</span>
+          </div>
+          <div class="file">
+            <svg class="f-ic" viewBox="0 0 16 16" fill="none"><path d="M4 2.5h5l3 3v8H4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M6 7h4M6 9.2h4M6 11.4h2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span class="f-main"><span class="f-name">README.md</span><span class="f-path">prototype/</span></span>
+          </div>
+          <div class="file">
+            <svg class="f-ic" viewBox="0 0 16 16" fill="none"><path d="M4 2.5h5l3 3v8H4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.4 6.6h3.2M6.4 9h3.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span class="f-main"><span class="f-name">radio-plugin-feasibility.md</span><span class="f-path">根目录</span></span>
+          </div>
+          <div class="file">
+            <svg class="f-ic" viewBox="0 0 16 16" fill="none"><path d="M3 3.5h10v9H3z" stroke="currentColor" stroke-width="1.2"/><path d="M6 5.8v5.4M6 8.5h4M10 5.8v5.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span class="f-main"><span class="f-name">0001-radio-entry.md</span><span class="f-path">docs/adr/</span></span>
+          </div>
+          <div class="file">
+            <svg class="f-ic" viewBox="0 0 16 16" fill="none"><path d="M4 2.5h5l3 3v8H4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M6 7h4M6 9.2h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span class="f-main"><span class="f-name">README.md</span><span class="f-path">probe/</span></span>
+          </div>
+
+          <div class="fsection" style="margin-top:14px">预览</div>
+          <div class="preview-wrap">
+            <div class="preview-card">
+              <div class="preview-top"><i class="pd"></i><i class="pd"></i><i class="pd"></i><span class="purl">127.0.0.1:8901/?v=bottom</span></div>
+              <div class="preview-thumb">
+                <div class="pt-bar"></div>
+                <div class="pt-side"></div>
+                <div class="pt-main"></div>
+                <div class="pt-files"></div>
+              </div>
+              <div class="preview-cap">
+                <span>1440 × 900</span><span class="spacer"></span><span class="diff-add">+248</span><span class="diff-del">−0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="files-foot"><i class="st"></i>工作区 main · 已保存 <span class="spacer" style="flex:1"></span>UTF-8</div>
+      </aside>
+    </div>
+  </div>
+</div>
+</body>
+</html>

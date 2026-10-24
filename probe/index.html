@@ -1,0 +1,1134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0b0d12">
+<title>电台可达性探测</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #141821;
+    --panel-2: #0d1118;
+    --border: #242b38;
+    --border-strong: #334055;
+    --text: #edf1f7;
+    --muted: #96a1b2;
+    --muted-2: #758093;
+    --accent: #8ab4ff;
+    --green: #45d18a;
+    --amber: #e8b45b;
+    --red: #ff8585;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    background: var(--bg);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100svh;
+    background:
+      radial-gradient(900px 420px at 50% -160px, rgba(43, 62, 96, 0.55) 0%, transparent 70%),
+      var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+      "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    padding: calc(22px + env(safe-area-inset-top)) 16px
+      calc(34px + env(safe-area-inset-bottom));
+  }
+
+  .head { padding: 0 2px 16px; }
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.3;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+  }
+
+  .sub {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .ip-card {
+    margin: 0 0 14px;
+    padding: 13px 15px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgba(31, 40, 56, 0.78), rgba(18, 23, 32, 0.92));
+  }
+
+  .ip-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .ip-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  .ip-dot {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 0 3px rgba(232, 180, 91, 0.12);
+  }
+
+  .ip-card[data-state="ok"] .ip-dot {
+    background: var(--green);
+    box-shadow: 0 0 0 3px rgba(69, 209, 138, 0.14);
+  }
+
+  .ip-card[data-state="fail"] .ip-dot {
+    background: var(--red);
+    box-shadow: 0 0 0 3px rgba(255, 133, 133, 0.13);
+  }
+
+  .ip-source {
+    color: var(--muted-2);
+    font-size: 15px;
+    text-align: right;
+  }
+
+  .ip-value {
+    margin-top: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 22px;
+    line-height: 1.35;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  .ip-value.is-fail { font-size: 19px; }
+
+  .ip-meta,
+  .ip-org {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .ip-org { color: var(--muted-2); }
+
+  .tip {
+    margin: 0 0 14px;
+    padding: 11px 13px;
+    border: 1px solid rgba(232, 180, 91, 0.36);
+    border-radius: 12px;
+    background: rgba(232, 180, 91, 0.09);
+    color: #f0c982;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .tip[hidden] { display: none; }
+
+  .bulk { margin-bottom: 16px; }
+
+  .bulk-btn {
+    width: 100%;
+    min-height: 50px;
+    padding: 0 16px;
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    background: #1a2331;
+    color: #dfe9fb;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .bulk-btn:active { background: #223049; }
+
+  .bulk-btn.is-running {
+    border-color: rgba(255, 133, 133, 0.4);
+    background: #241a1e;
+    color: #ffb3b3;
+  }
+
+  .bulk-note {
+    min-height: 22px;
+    margin: 8px 2px 0;
+    color: var(--muted-2);
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+
+  .station {
+    padding: 13px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+  }
+
+  .station.is-error {
+    border-color: rgba(255, 133, 133, 0.28);
+    background: #17141a;
+  }
+
+  .station-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .name {
+    font-size: 18px;
+    line-height: 1.3;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .src {
+    margin-top: 1px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    margin-top: 8px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: #11151d;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .badge.is-connecting {
+    border-color: rgba(232, 180, 91, 0.36);
+    background: rgba(232, 180, 91, 0.08);
+    color: var(--amber);
+    animation: pulse 1.25s ease-in-out infinite;
+  }
+
+  .badge.is-playing {
+    border-color: rgba(69, 209, 138, 0.34);
+    background: rgba(69, 209, 138, 0.08);
+    color: var(--green);
+  }
+
+  .badge.is-done {
+    border-color: rgba(69, 209, 138, 0.3);
+    background: rgba(69, 209, 138, 0.08);
+    color: var(--green);
+  }
+
+  .badge.is-error {
+    border-color: rgba(255, 133, 133, 0.34);
+    background: rgba(255, 133, 133, 0.08);
+    color: var(--red);
+  }
+
+  .note {
+    color: var(--muted-2);
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .note[hidden] { display: none; }
+
+  .play-btn {
+    flex: none;
+    min-width: 92px;
+    min-height: 52px;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background: #e8edf5;
+    color: #0c1119;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 650;
+    line-height: 1.2;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .play-btn:active { transform: scale(0.97); }
+
+  .play-btn.is-stop {
+    border-color: #643039;
+    background: #3a2026;
+    color: #ffb4b4;
+  }
+
+  .url {
+    margin-top: 11px;
+    padding: 8px 10px;
+    border: 1px dashed #3b4455;
+    border-radius: 10px;
+    background: var(--panel-2);
+    color: #b6c1d1;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 15px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  .url[hidden] { display: none; }
+
+  .summary {
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+
+  .summary-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .summary-head h2 {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.35;
+    font-weight: 600;
+  }
+
+  .copy-btn {
+    min-width: 100px;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: #1a2331;
+    color: #dfe9fb;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .copy-btn:active { background: #223049; }
+
+  #summary {
+    display: block;
+    width: 100%;
+    min-height: 250px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel-2);
+    color: #c6d0df;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 15px;
+    line-height: 1.55;
+    resize: vertical;
+    spellcheck: false;
+  }
+
+  .copy-hint {
+    min-height: 23px;
+    margin: 6px 2px 0;
+    color: var(--muted-2);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .foot {
+    margin-top: 20px;
+    color: var(--muted-2);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .bulk-btn:focus-visible,
+  .copy-btn:focus-visible,
+  .play-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
+  @media (max-width: 359px) {
+    .wrap { padding-left: 12px; padding-right: 12px; }
+    .play-btn { min-width: 82px; padding: 0 12px; }
+    .name { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="head">
+    <h1>电台可达性探测</h1>
+    <p class="sub">在手机当前网络下逐个试播，记录能否出声与首声耗时。</p>
+  </header>
+
+  <section class="ip-card" id="ipCard" data-state="loading" aria-live="polite">
+    <div class="ip-top">
+      <div class="ip-label"><span class="ip-dot"></span>本机出口 IP</div>
+      <span class="ip-source" id="ipSource"></span>
+    </div>
+    <div class="ip-value" id="ipValue">获取中…</div>
+    <div class="ip-meta" id="ipMeta">正在请求 ipinfo.io…</div>
+    <div class="ip-org" id="ipOrg"></div>
+  </section>
+
+  <div class="tip" id="tip" role="status" hidden></div>
+
+  <div class="bulk">
+    <button class="bulk-btn" id="bulkBtn" type="button">全部测一遍</button>
+    <div class="bulk-note" id="bulkNote">顺序测试 7 个台，每个播放 6 秒；失败不会中断。iOS 可能拦截自动播放。</div>
+  </div>
+
+  <section class="list" id="list" aria-label="电台列表"></section>
+
+  <section class="summary" aria-labelledby="summaryTitle">
+    <div class="summary-head">
+      <h2 id="summaryTitle">结果汇总</h2>
+      <button class="copy-btn" id="copyBtn" type="button">复制结果</button>
+    </div>
+    <textarea id="summary" readonly rows="11" spellcheck="false" aria-label="探测结果文本"></textarea>
+    <p class="copy-hint" id="copyHint"></p>
+  </section>
+
+  <footer class="foot">
+    音频流为第三方 https 地址，探测只在本机浏览器发起。失败或超时的行会显示 URL，便于截图反馈。<br>
+    首声以浏览器 playing 事件为准；手机静音或音量为 0 时可能听不到声音。
+  </footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var STATIONS = [
+    { name: 'ChillSynth', source: 'Nightride FM', url: 'https://stream.nightride.fm/chillsynth.mp3' },
+    { name: 'Nightride', source: 'Nightride FM', url: 'https://stream.nightride.fm/nightride.mp3' },
+    { name: 'Darksynth', source: 'Nightride FM', url: 'https://stream.nightride.fm/darksynth.mp3' },
+    { name: 'Spacesynth', source: 'Nightride FM', url: 'https://stream.nightride.fm/spacesynth.mp3' },
+    { name: 'Main Mix', source: 'Radio Paradise', url: 'https://stream.radioparadise.com/aac-320' },
+    { name: 'Mellow Mix', source: 'Radio Paradise', url: 'https://stream.radioparadise.com/mellow-128' },
+    { name: 'EVE Radio', source: 'GamingNow', url: 'https://media01.gamingnow.net:8010/erweb.mp3' }
+  ];
+
+  var ERROR_TEXT = {
+    1: '已中止（MEDIA_ERR_ABORTED）',
+    2: '网络错误（MEDIA_ERR_NETWORK）',
+    3: '解码错误（MEDIA_ERR_DECODE）',
+    4: '源不支持（MEDIA_ERR_SRC_NOT_SUPPORTED）'
+  };
+
+  var PLAY_SECONDS = 6;
+  var TIMEOUT_MS = 15000;
+
+  var els = {
+    ipCard: document.getElementById('ipCard'),
+    ipValue: document.getElementById('ipValue'),
+    ipMeta: document.getElementById('ipMeta'),
+    ipOrg: document.getElementById('ipOrg'),
+    ipSource: document.getElementById('ipSource'),
+    tip: document.getElementById('tip'),
+    bulkBtn: document.getElementById('bulkBtn'),
+    bulkNote: document.getElementById('bulkNote'),
+    list: document.getElementById('list'),
+    summary: document.getElementById('summary'),
+    copyBtn: document.getElementById('copyBtn'),
+    copyHint: document.getElementById('copyHint')
+  };
+
+  var app = {
+    ipStatus: 'loading',
+    ip: null,
+    active: null,
+    batchRunning: false,
+    batchCancelled: false,
+    rows: []
+  };
+
+  var runSeq = 0;
+  var copyTimer = null;
+
+  function pad2(n) {
+    return n < 10 ? '0' + n : String(n);
+  }
+
+  function nowText() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) +
+      ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+
+  function sleep(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  }
+
+  function setText(el, text) {
+    if (el.textContent !== text) el.textContent = text;
+  }
+
+  function buildList() {
+    STATIONS.forEach(function (station) {
+      var row = {
+        station: station,
+        state: 'idle',
+        result: null,
+        errorCode: null,
+        note: '',
+        firstSound: null,
+        audio: null,
+        timeoutTimer: null,
+        autoTimer: null,
+        pending: null,
+        run: null
+      };
+
+      var card = document.createElement('article');
+      card.className = 'station';
+
+      var main = document.createElement('div');
+      main.className = 'station-main';
+
+      var info = document.createElement('div');
+      info.className = 'info';
+
+      var name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = station.name;
+
+      var src = document.createElement('div');
+      src.className = 'src';
+      src.textContent = station.source;
+
+      var meta = document.createElement('div');
+      meta.className = 'meta';
+
+      var badge = document.createElement('span');
+      badge.className = 'badge';
+      badge.textContent = '待测';
+
+      var note = document.createElement('span');
+      note.className = 'note';
+      note.hidden = true;
+
+      meta.appendChild(badge);
+      meta.appendChild(note);
+      info.appendChild(name);
+      info.appendChild(src);
+      info.appendChild(meta);
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'play-btn';
+      btn.textContent = '播放';
+      btn.setAttribute('aria-label', '播放 ' + station.name);
+      btn.addEventListener('click', function () { onRowButton(row); });
+
+      main.appendChild(info);
+      main.appendChild(btn);
+
+      var url = document.createElement('div');
+      url.className = 'url';
+      url.hidden = true;
+      url.textContent = station.url;
+
+      card.appendChild(main);
+      card.appendChild(url);
+      els.list.appendChild(card);
+
+      row.card = card;
+      row.badge = badge;
+      row.noteEl = note;
+      row.btn = btn;
+      row.urlEl = url;
+
+      app.rows.push(row);
+      updateRow(row);
+    });
+  }
+
+  function updateRow(row) {
+    var badgeText = '待测';
+    var badgeClass = 'badge';
+    var showUrl = false;
+
+    if (row.state === 'connecting') {
+      badgeText = '连接中…';
+      badgeClass = 'badge is-connecting';
+    } else if (row.state === 'playing') {
+      badgeText = '播放中 · ' + row.firstSound.toFixed(1) + 's';
+      badgeClass = 'badge is-playing';
+    } else if (row.state === 'done' && row.result && row.result.ok) {
+      badgeText = '✅ ' + row.result.seconds.toFixed(1) + 's';
+      badgeClass = 'badge is-done';
+    } else if (row.state === 'failed') {
+      badgeText = '❌ error=' + (row.errorCode == null ? '?' : row.errorCode);
+      badgeClass = 'badge is-error';
+      showUrl = true;
+    } else if (row.state === 'timeout') {
+      badgeText = '❌ 超时';
+      badgeClass = 'badge is-error';
+      showUrl = true;
+    } else if (row.state === 'blocked') {
+      badgeText = '❌ 被拦截';
+      badgeClass = 'badge is-error';
+      showUrl = true;
+    } else if (row.state === 'cancelled') {
+      badgeText = '已取消';
+    }
+
+    setText(row.badge, badgeText);
+    row.badge.className = badgeClass;
+    setText(row.noteEl, row.note || '');
+    row.noteEl.hidden = !row.note;
+    row.urlEl.hidden = !showUrl;
+    row.card.classList.toggle('is-error', showUrl);
+
+    var active = app.active === row;
+    setText(row.btn, active ? '停止' : '播放');
+    row.btn.classList.toggle('is-stop', active);
+    row.btn.setAttribute('aria-label', (active ? '停止 ' : '播放 ') + row.station.name);
+  }
+
+  function summarizeRow(row) {
+    var label = row.station.name.padEnd(12, ' ');
+    if (row.state === 'done' && row.result && row.result.ok) {
+      return label + '✅ ' + row.result.seconds.toFixed(1) + 's';
+    }
+    if (row.state === 'failed') {
+      return label + '❌ error=' + (row.errorCode == null ? '?' : row.errorCode);
+    }
+    if (row.state === 'timeout') return label + '❌ 超时';
+    if (row.state === 'blocked') return label + '❌ 被拦截';
+    if (row.state === 'cancelled') return label + '— 已取消';
+    if (row.state === 'playing') return label + '▶ 播放中';
+    if (row.state === 'connecting') return label + '… 连接中';
+    return label + '· 未测';
+  }
+
+  function ipSummaryLine() {
+    if (app.ipStatus === 'fail') return '出口IP: 无法获取';
+    if (app.ipStatus !== 'ok' || !app.ip) return '出口IP: 获取中…';
+    var d = app.ip;
+    var parts = [d.country, d.city, d.org].filter(Boolean);
+    if (!parts.length) parts = ['仅 IP'];
+    return '出口IP: ' + d.ip + ' (' + parts.join('/') + ')';
+  }
+
+  function renderSummary() {
+    var lines = [ipSummaryLine(), '时间: ' + nowText()];
+    app.rows.forEach(function (row) {
+      lines.push(summarizeRow(row));
+    });
+    els.summary.value = lines.join('\n');
+  }
+
+  function renderIp() {
+    if (app.ipStatus === 'loading') {
+      els.ipCard.dataset.state = 'loading';
+      setText(els.ipValue, '获取中…');
+      els.ipValue.classList.remove('is-fail');
+      setText(els.ipMeta, '正在请求 ipinfo.io…');
+      setText(els.ipOrg, '');
+      setText(els.ipSource, '');
+      return;
+    }
+
+    if (app.ipStatus === 'fail') {
+      els.ipCard.dataset.state = 'fail';
+      setText(els.ipValue, '无法获取出口 IP');
+      els.ipValue.classList.add('is-fail');
+      setText(els.ipMeta, 'ipinfo.io 与 ipify 均不可达，可能被当前网络拦截。');
+      setText(els.ipOrg, '');
+      setText(els.ipSource, '');
+      return;
+    }
+
+    var d = app.ip;
+    els.ipCard.dataset.state = 'ok';
+    els.ipValue.classList.remove('is-fail');
+    setText(els.ipValue, d.ip);
+
+    var place = [d.country, d.region, d.city].filter(Boolean).join(' · ');
+    setText(els.ipMeta, place || '地区未知（只拿到 IP）');
+
+    var org = d.org || (d.source === 'ipify' ? '运营商未知（ipify 只返回 IP）' : '运营商未知');
+    setText(els.ipOrg, org);
+    setText(els.ipSource, '来源 ' + d.source);
+  }
+
+  function showTip(message) {
+    els.tip.textContent = message;
+    els.tip.hidden = false;
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      window.scrollTo(0, 0);
+    }
+  }
+
+  function clearTip() {
+    els.tip.textContent = '';
+    els.tip.hidden = true;
+  }
+
+  function onRowButton(row) {
+    if (app.active === row) {
+      if (app.batchRunning) app.batchCancelled = true;
+      stopActive('manual');
+      return;
+    }
+    if (app.batchRunning) app.batchCancelled = true;
+    if (app.active) stopActive('switch');
+    startTest(row, { batch: false });
+  }
+
+  function startTest(row, opts) {
+    if (app.active) stopActive('switch');
+
+    var audio = new Audio();
+    audio.preload = 'auto';
+    audio.src = row.station.url;
+
+    var run = {
+      token: ++runSeq,
+      audio: audio,
+      settled: false,
+      startedAt: performance.now()
+    };
+
+    row.audio = audio;
+    row.run = run;
+    row.state = 'connecting';
+    row.result = null;
+    row.errorCode = null;
+    row.firstSound = null;
+    row.note = '';
+    app.active = row;
+    updateRow(row);
+    renderSummary();
+
+    console.log('[probe] 开始测试', row.station.name, row.station.url);
+
+    function finish(outcome, finalize) {
+      if (run.settled || row.run !== run) return;
+      run.settled = true;
+      row.run = null;
+
+      clearTimeout(row.timeoutTimer);
+      clearTimeout(row.autoTimer);
+      row.timeoutTimer = null;
+      row.autoTimer = null;
+
+      audio.onplaying = null;
+      audio.onerror = null;
+      try { audio.pause(); } catch (err) { /* ignore */ }
+      try {
+        audio.removeAttribute('src');
+        audio.load();
+      } catch (err) { /* ignore */ }
+
+      if (app.active === row) app.active = null;
+      if (row.audio === audio) row.audio = null;
+
+      finalize();
+      updateRow(row);
+      renderSummary();
+
+      var resolve = row.pending;
+      row.pending = null;
+      if (resolve) resolve(outcome);
+    }
+
+    row.timeoutTimer = setTimeout(function () {
+      if (run.settled || row.run !== run) return;
+      console.warn('[probe] 超时', row.station.name, row.station.url);
+      finish('timeout', function () {
+        row.state = 'timeout';
+        row.result = { ok: false, kind: 'timeout' };
+        row.note = '15 秒内未开始播放';
+      });
+    }, TIMEOUT_MS);
+
+    audio.onplaying = function () {
+      if (run.settled || row.run !== run) return;
+      if (row.firstSound != null) return;
+      var seconds = Math.max(0.1, (performance.now() - run.startedAt) / 1000);
+      row.firstSound = seconds;
+      row.state = 'playing';
+      row.note = '正在播放，' + PLAY_SECONDS + ' 秒后自动停止';
+      if (row.timeoutTimer) {
+        clearTimeout(row.timeoutTimer);
+        row.timeoutTimer = null;
+      }
+      updateRow(row);
+      renderSummary();
+      console.log('[probe] 首声', row.station.name, seconds.toFixed(2) + 's');
+
+      row.autoTimer = setTimeout(function () {
+        if (run.settled || row.run !== run) return;
+        finish('done', function () {
+          row.state = 'done';
+          row.result = { ok: true, seconds: seconds };
+          row.note = '已自动停止（播放 ' + PLAY_SECONDS + ' 秒）';
+          console.log('[probe] 自动停止', row.station.name, '首声 ' + seconds.toFixed(2) + 's');
+        });
+      }, PLAY_SECONDS * 1000);
+    };
+
+    audio.onerror = function () {
+      if (run.settled || row.run !== run) return;
+      var code = audio.error ? audio.error.code : 0;
+      var desc = ERROR_TEXT[code] || '未知媒体错误';
+      console.warn('[probe] 失败', row.station.name, 'error=' + code, desc, row.station.url);
+      finish('failed', function () {
+        row.state = 'failed';
+        row.errorCode = code;
+        row.result = { ok: false, kind: 'error', code: code };
+        row.note = desc;
+      });
+    };
+
+    function handlePlayError(err) {
+      if (run.settled || row.run !== run) return;
+      var name = err && err.name ? err.name : '';
+      var message = err && err.message ? String(err.message) : '';
+
+      if (name === 'NotAllowedError' || /not.?allowed/i.test(message)) {
+        console.warn('[probe] 播放被浏览器拦截', row.station.name, message);
+        finish('notallowed', function () {
+          row.state = 'blocked';
+          row.result = { ok: false, kind: 'blocked' };
+          row.note = '浏览器拦截了自动播放';
+          showTip('浏览器拦截了自动播放：请逐个点击「播放」测试。');
+        });
+        return;
+      }
+
+      if (name === 'AbortError') return;
+
+      var code = audio.error ? audio.error.code : 0;
+      console.warn('[probe] play() 失败', row.station.name, name, message, 'error=' + code);
+      finish('failed', function () {
+        row.state = 'failed';
+        row.errorCode = code;
+        row.result = { ok: false, kind: 'error', code: code };
+        row.note = code ? (ERROR_TEXT[code] || '播放失败') : '无法播放（' + (name || '未知错误') + '）';
+      });
+    }
+
+    var playPromise = null;
+    try {
+      playPromise = audio.play();
+    } catch (err) {
+      handlePlayError(err);
+    }
+    if (playPromise && typeof playPromise.then === 'function') {
+      playPromise.catch(handlePlayError);
+    }
+  }
+
+  function stopActive(reason) {
+    var row = app.active;
+    if (!row) return;
+
+    var audio = row.audio;
+    var run = row.run;
+    app.active = null;
+    row.audio = null;
+    row.run = null;
+
+    if (run) {
+      run.settled = true;
+    }
+    clearTimeout(row.timeoutTimer);
+    clearTimeout(row.autoTimer);
+    row.timeoutTimer = null;
+    row.autoTimer = null;
+
+    if (audio) {
+      audio.onplaying = null;
+      audio.onerror = null;
+      try { audio.pause(); } catch (err) { /* ignore */ }
+      try {
+        audio.removeAttribute('src');
+        audio.load();
+      } catch (err) { /* ignore */ }
+    }
+
+    var outcome = 'cancelled';
+    if (row.state === 'playing' && row.firstSound != null) {
+      row.state = 'done';
+      row.result = { ok: true, seconds: row.firstSound };
+      row.note = reason === 'switch' ? '已停止（切换电台）' : '已手动停止';
+      outcome = 'done';
+      console.log('[probe] 停止', row.station.name, '首声 ' + row.firstSound.toFixed(2) + 's');
+    } else if (row.state === 'connecting') {
+      row.state = 'cancelled';
+      row.result = null;
+      row.note = '已取消';
+      console.log('[probe] 取消', row.station.name);
+    }
+
+    updateRow(row);
+    renderSummary();
+
+    var resolve = row.pending;
+    row.pending = null;
+    if (resolve) resolve(outcome);
+  }
+
+  function testRow(row, opts) {
+    return new Promise(function (resolve) {
+      row.pending = resolve;
+      startTest(row, opts);
+    });
+  }
+
+  async function startBatch() {
+    if (app.batchRunning) {
+      app.batchCancelled = true;
+      stopActive('manual');
+      return;
+    }
+
+    if (app.active) stopActive('manual');
+    app.batchRunning = true;
+    app.batchCancelled = false;
+    clearTip();
+    els.bulkBtn.classList.add('is-running');
+    setText(els.bulkBtn, '停止批量测试');
+    setText(els.bulkNote, '准备开始…');
+    console.log('[probe] 开始批量测试');
+
+    var ok = 0;
+    var failed = 0;
+    var blocked = false;
+
+    for (var i = 0; i < app.rows.length; i++) {
+      if (app.batchCancelled) break;
+      var row = app.rows[i];
+      setText(els.bulkBtn, '停止批量（' + (i + 1) + '/7）');
+      setText(els.bulkNote, '正在测试 ' + (i + 1) + '/7 · ' + row.station.name);
+
+      var outcome = await testRow(row, { batch: true });
+      if (outcome === 'done') ok++;
+      if (outcome === 'failed' || outcome === 'timeout') failed++;
+
+      if (outcome === 'notallowed') {
+        blocked = true;
+        break;
+      }
+      if (app.batchCancelled) break;
+      await sleep(450);
+    }
+
+    app.batchRunning = false;
+    els.bulkBtn.classList.remove('is-running');
+    setText(els.bulkBtn, '全部测一遍');
+
+    if (blocked) {
+      setText(els.bulkNote, '批量测试已停止：浏览器拦截了自动播放。');
+      showTip('请逐个点击测试。浏览器只允许由点击直接触发的播放。');
+      console.warn('[probe] 批量测试因 NotAllowedError 停止');
+    } else if (app.batchCancelled) {
+      setText(els.bulkNote, '批量测试已停止。');
+      console.log('[probe] 批量测试被用户停止');
+    } else {
+      setText(els.bulkNote, '批量测试完成：成功 ' + ok + ' 个，失败/超时 ' + failed + ' 个。');
+      console.log('[probe] 批量测试完成', { ok: ok, failed: failed });
+    }
+  }
+
+  function flashCopy(message, hint) {
+    clearTimeout(copyTimer);
+    setText(els.copyBtn, message);
+    setText(els.copyHint, hint);
+    copyTimer = setTimeout(function () {
+      setText(els.copyBtn, '复制结果');
+      setText(els.copyHint, '');
+    }, 2600);
+  }
+
+  async function copySummary() {
+    var text = els.summary.value;
+    var copied = false;
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        copied = true;
+      }
+    } catch (err) {
+      console.warn('[probe] clipboard.writeText 失败', err);
+    }
+
+    els.summary.focus();
+    try {
+      els.summary.select();
+      els.summary.setSelectionRange(0, text.length);
+    } catch (err) { /* ignore */ }
+
+    if (!copied) {
+      try {
+        copied = document.execCommand('copy');
+      } catch (err) {
+        copied = false;
+      }
+    }
+
+    if (copied) {
+      flashCopy('已复制', '结果已复制，可直接粘贴。');
+      console.log('[probe] 结果已复制');
+    } else {
+      flashCopy('已选中', '自动复制不可用，文本已全选，请长按手动复制。');
+      console.warn('[probe] 自动复制不可用，已选中文本等待手动复制');
+    }
+  }
+
+  function fetchJson(url, timeoutMs) {
+    return new Promise(function (resolve, reject) {
+      var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      var timer = setTimeout(function () {
+        if (controller) {
+          try { controller.abort(); } catch (err) { /* ignore */ }
+        }
+        reject(new Error('请求超时'));
+      }, timeoutMs);
+
+      fetch(url, {
+        cache: 'no-store',
+        signal: controller ? controller.signal : undefined
+      }).then(function (response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.json();
+      }).then(function (data) {
+        clearTimeout(timer);
+        resolve(data);
+      }).catch(function (err) {
+        clearTimeout(timer);
+        reject(err);
+      });
+    });
+  }
+
+  async function loadIp() {
+    var sources = [
+      { name: 'ipinfo.io', url: 'https://ipinfo.io/json' },
+      { name: 'ipify', url: 'https://api.ipify.org?format=json' }
+    ];
+
+    for (var i = 0; i < sources.length; i++) {
+      var source = sources[i];
+      try {
+        var data = await fetchJson(source.url, 6000);
+        if (!data || !data.ip) throw new Error('返回中没有 ip 字段');
+        app.ip = {
+          ip: String(data.ip),
+          city: data.city || '',
+          region: data.region || '',
+          country: data.country || '',
+          org: data.org || '',
+          source: source.name
+        };
+        app.ipStatus = 'ok';
+        console.log('[probe] 出口 IP 信息', app.ip);
+        renderIp();
+        renderSummary();
+        return;
+      } catch (err) {
+        console.warn('[probe] ' + source.name + ' 获取失败：', err && err.message ? err.message : err);
+      }
+    }
+
+    app.ipStatus = 'fail';
+    app.ip = null;
+    console.warn('[probe] 无法获取出口 IP：ipinfo.io 与 ipify 均失败');
+    renderIp();
+    renderSummary();
+  }
+
+  els.bulkBtn.addEventListener('click', startBatch);
+  els.copyBtn.addEventListener('click', copySummary);
+
+  buildList();
+  renderIp();
+  renderSummary();
+  console.log('[probe] 页面就绪，共 ' + app.rows.length + ' 个电台');
+  loadIp();
+})();
+</script>
+</body>
+</html>
