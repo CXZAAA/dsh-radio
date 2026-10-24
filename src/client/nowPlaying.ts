@@ -68,6 +68,13 @@ function trackFromTitle(title: unknown): Track | null {
   if (typeof title !== 'string') return null;
   const trimmed = title.trim();
   if (trimmed === '' || trimmed.toLowerCase() === 'unknown') return null;
+  // Icecast 的 StreamTitle 常写成「歌手 - 曲名」；拆开后面板统一显示成「歌手 — 曲名」。
+  const separator = trimmed.indexOf(' - ');
+  if (separator > 0 && separator <= 80 && separator < trimmed.length - 3) {
+    const artist = trimmed.slice(0, separator).trim();
+    const name = trimmed.slice(separator + 3).trim();
+    if (artist !== '' && name !== '') return { artist, title: name };
+  }
   return { title: trimmed };
 }
 

@@ -24,10 +24,12 @@ beforeEach(() => {
 
 test('Icecast：多源里按 listenurl 精确匹配', () => {
   assert.deepEqual(parseIcecast(nightrideStats, 'chillsynth.mp3'), {
-    title: 'The Midnight - Vampires',
+    artist: 'The Midnight',
+    title: 'Vampires',
   });
   assert.deepEqual(parseIcecast(nightrideStats, 'darksynth.mp3'), {
-    title: 'Dance With the Dead - Riot',
+    artist: 'Dance With the Dead',
+    title: 'Riot',
   });
 });
 
@@ -76,7 +78,7 @@ test('RP 响应：ok + artist/title；无 artist 时只留 title', () => {
   assert.equal(parseNowPlayingResponse(null), null);
 });
 
-test('Nightride 解析走 Icecast，title 原样保留', async () => {
+test('Nightride 解析走 Icecast，拆分「歌手 - 曲名」', async () => {
   const requested: string[] = [];
   const fakeFetch = (async (input: string | URL | Request) => {
     requested.push(String(input));
@@ -87,7 +89,7 @@ test('Nightride 解析走 Icecast，title 原样保留', async () => {
     fetch: fakeFetch,
     now: () => 0,
   });
-  assert.deepEqual(track, { title: 'The Midnight - Vampires' });
+  assert.deepEqual(track, { artist: 'The Midnight', title: 'Vampires' });
   assert.equal(requested[0], 'https://stream.nightride.fm/status-json.xsl');
 });
 

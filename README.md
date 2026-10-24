@@ -157,11 +157,15 @@ lib/
 
 ## 截图 / Screenshots
 
-![状态行播放中：胶囊、台名与频谱](design/shots/dock-playing.png)
+真实 dsh Web GUI（浅色主题，2026-10-25）：
 
-![面板：电台列表与当前曲目](design/shots/panel-track.png)
+![状态行里的电台胶囊：播放/暂停、下一台、台名、频谱](design/screenshots/status-bar.png)
 
-> 以上图片都在模拟状态行的 harness 中渲染，非真实截图；真机截图待补。其余草图与设计稿在 `design/shots/`、`design/directions/`。
+![面板：电台列表、频谱与当前曲目](design/screenshots/panel.png)
+
+![设置：系统媒体键、频谱样式、记住上次电台](design/screenshots/settings.png)
+
+其余草图、方向对比和设计稿在 `design/shots/`、`design/directions/`。
 
 ## 已知限制
 

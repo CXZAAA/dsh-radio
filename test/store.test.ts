@@ -120,7 +120,7 @@ test('切台立即清空上一台曲目', async () => {
     status: 200,
     json: async () => ({
       icestats: {
-        source: [{ listenurl: 'https://stream.nightride.fm/chillsynth.mp3', title: 'A - B' }],
+        source: [{ listenurl: 'https://stream.nightride.fm/chillsynth.mp3', title: 'Track A' }],
       },
     }),
   })) as unknown as typeof fetch;
@@ -128,7 +128,7 @@ test('切台立即清空上一台曲目', async () => {
     store.selectStation('chillsynth');
     audio.emit('playing');
     await new Promise((resolve) => setTimeout(resolve, 20));
-    assert.equal(store.getRadioState().nowPlaying?.title, 'A - B');
+    assert.equal(store.getRadioState().nowPlaying?.title, 'Track A');
 
     store.nextStation();
     assert.equal(store.getRadioState().nowPlaying, null, '切台后不能短暂显示上一台的歌');
@@ -153,7 +153,7 @@ test('切台立即发起曲目请求，loading→playing 不中止它', async ()
       status: 200,
       json: async () => ({
         icestats: {
-          source: [{ listenurl: 'https://stream.nightride.fm/nightride.mp3', title: 'A - B' }],
+          source: [{ listenurl: 'https://stream.nightride.fm/nightride.mp3', title: 'Track B' }],
         },
       }),
     } as unknown as Response;
@@ -173,7 +173,7 @@ test('切台立即发起曲目请求，loading→playing 不中止它', async ()
     release();
     await new Promise((resolve) => setTimeout(resolve, 0));
     assert.equal(store.getRadioState().nowPlaying?.stationId, 'nightride');
-    assert.equal(store.getRadioState().nowPlaying?.title, 'A - B');
+    assert.equal(store.getRadioState().nowPlaying?.title, 'Track B');
   } finally {
     globalThis.fetch = originalFetch;
   }

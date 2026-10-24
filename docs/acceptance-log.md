@@ -40,6 +40,16 @@
 
 - 2026-10-24：重启后从真实 dsh 直接请求宿主路由，全部符合预期——`GET /plugins/dsh-plugin-radio/now-playing?station=main-mix` → 200 JSON（R.E.M. / All the Right Friends）、`station=mellow-mix` → 200 JSON、未知 station → 400、POST → 405。说明宿主半侧已在真实进程里注册并生效。
 
+## 真机证据（2026-10-25，浅色主题）
+
+用户提供的真实 dsh Web GUI 截图（`design/screenshots/`）：
+
+- `status-bar.png`：状态行胶囊可见，与「轮次·速度」「tokens·缓存命中」两个胶囊并排（对应第 1 条）。
+- `panel.png`：面板展开，7 条电台、频谱带、当前曲目 `Voyage — Glow`、底部播放控制与音量行（对应第 6、9 条与曲目显示）。
+- `settings.png`：设置页三项（系统媒体键 / 频谱样式 / 记住上次电台）与开关状态。
+
+由此第 1、6、9、11（浅色）条从「待验证」升级为「已通过（截图）」；其余条目仍待补。
+
 ## 待办
 
 1. 在真实 dsh Web GUI 里补 1–14 条，逐条留截图/录屏 + 浏览器版本 + 时间。
