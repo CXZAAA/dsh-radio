@@ -36,7 +36,8 @@
     "lib/index.js",
     "lib/client.js",
     "cordis.patch.yml",
-    "locale/*.json"
+    "locale/*.json",
+    "screenshots.json"
   ],
   "dsh": {
     "bundle": {
