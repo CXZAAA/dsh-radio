@@ -1,0 +1,60 @@
+{
+  "name": "dsh-plugin-radio",
+  "version": "0.1.0",
+  "packageManager": "pnpm@12.8.1",
+  "description": "Ambient internet radio for the DeepSeek Harness Web GUI",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "radio",
+    "internet-radio",
+    "nightride",
+    "radio-paradise"
+  ],
+  "type": "module",
+  "license": "MIT",
+  "author": "CXZAAA",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CXZAAA/dsh-radio.git"
+  },
+  "homepage": "https://github.com/CXZAAA/dsh-radio#readme",
+  "bugs": {
+    "url": "https://github.com/CXZAAA/dsh-radio/issues"
+  },
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": "./lib/client.js"
+  },
+  "main": "./lib/index.js",
+  "files": [
+    "lib/index.js",
+    "lib/client.js"
+  ],
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [],
+      "external": [
+        "react",
+        "react-dom/client"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/build.mjs && node --test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.0",
+    "esbuild": "^0.25.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.9.0"
+  }
+}

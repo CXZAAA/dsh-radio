@@ -6,3 +6,11 @@ build/
 .DS_Store
 *.log
 *.backup
+
+# build environment
+.pnpm-store/
+.cache/
+
+# 设计过程产物（第三方参考图与迭代截图不入库）
+design/refs/
+prototype/shots/

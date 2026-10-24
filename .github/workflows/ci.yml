@@ -1,0 +1,47 @@
+name: CI
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: typecheck & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 版本由 package.json 的 packageManager 字段声明（pnpm 12），不在这里重复指定。
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # pnpm-workspace.yaml 已把 store/cache 指到仓库内；这里再显式确认一次，
+      # 保证 checkout 出来的工作区里安装不依赖 $HOME 写权限。
+      - name: Point pnpm store inside the workspace
+        run: |
+          pnpm config set store-dir .pnpm-store
+          pnpm config get store-dir
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
