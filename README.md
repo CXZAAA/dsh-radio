@@ -1,5 +1,7 @@
 # dsh-plugin-radio
 
+[![CI](https://github.com/CXZAAA/dsh-radio/actions/workflows/ci.yml/badge.svg)](https://github.com/CXZAAA/dsh-radio/actions/workflows/ci.yml)
+
 Ambient internet radio for the DeepSeek-Harness Web GUI. A 24px capsule sits in the composer status row, next to the turn and token pills: one click starts playing, and station switching, pause, volume and settings live in that strip and its popover. Seven preset stations (Nightride FM, Radio Paradise, EVE Radio), real FFT spectrum, MediaSession keys, now-playing metadata and remembered state. Audio is browser-direct — the host only proxies Radio Paradise's track JSON. MIT licensed.
 
 在 DSH Web GUI 里边工作边听的网络电台。入口是一条 24px 的胶囊，默认嵌在 composer 下方的状态行里，与轮次、token 两个状态胶囊并排；点一次出声，切台、暂停、音量和设置都在同一条细条与它的面板里完成。
@@ -21,13 +23,25 @@ Ambient internet radio for the DeepSeek-Harness Web GUI. A 24px capsule sits in 
 
 要求：已安装并运行 dsh web，Node 22+，pnpm。
 
-### A. 从 GitHub 安装
+### A. 从 GitHub 安装（推荐：克隆后用脚本）
 
 ```bash
-dsh plugin --profile web add github:CXZAAA/dsh-radio
+git clone https://github.com/CXZAAA/dsh-radio.git
+cd dsh-radio
+bash scripts/install-local.sh
+sudo systemctl restart dsh-web
 ```
 
-首次安装后，在 `~/.dsh/profiles/web/cordis.patch.yml` 追加 Loader 行，然后重启 dsh-web 并刷新页面：
+脚本会把仓库 `link:` 进 web profile，并幂等追加 Loader 行（`id: radio`）。仓库已提交 `lib/` 构建产物，不需要在本地构建。
+
+<details>
+<summary>也可以直接用 pnpm 的 git 安装（未在 CI 中验证）</summary>
+
+```bash
+dsh plugin --profile web add "git+https://github.com/CXZAAA/dsh-radio.git"
+```
+
+首次安装后，手动在 `~/.dsh/profiles/web/cordis.patch.yml` 追加 Loader 行，再重启 dsh-web：
 
 ```yaml
 # dsh-radio
@@ -36,7 +50,8 @@ dsh plugin --profile web add github:CXZAAA/dsh-radio
       name: dsh-plugin-radio
 ```
 
-仓库已提交 `lib/` 构建产物，从 GitHub 安装不需要在本地构建。
+注意：`github:` 简写在 pnpm 里默认走 SSH，没有 GitHub SSH key 的机器会卡住；用上面的 `git+https://` 形式。这条路径依赖 pnpm 能拉到仓库，未在本仓库 CI 中验证，失败时请改用上面的克隆脚本。
+</details>
 
 ### B. 本地开发安装
 
