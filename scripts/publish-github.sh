@@ -6,13 +6,14 @@
 #   1. 检查 git/curl，确认在仓库根目录、main 分支存在；
 #   2. 交互读取 GitHub PAT（不回显、不落盘、不写 shell history）；
 #   3. 用 API 查询仓库是否存在，不存在则创建（public，开放 Issues）；
-#   4. 配置 remote origin 并推送 main；
+#   4. 配置 remote origin，用同一把 PAT 认证并推送 main；
 #   5. 通过 API 设置 topics 与英文描述。
 #
 # 不会提交代码、不会改写历史。DRY_RUN=1 只打印将执行的命令。
 #
 # 安全说明：
-#   - PAT 只存在于当前进程的内存里，脚本退出即丢弃；不写文件、不进命令历史；
+#   - PAT 只存在于当前进程的环境变量里，脚本退出即丢弃；不写文件、不进命令历史；
+#     git push 通过临时 GIT_ASKPASS 脚本取用，token 不会出现在命令行参数里；
 #   - 所有 curl 都用 -H "Authorization: Bearer $TOKEN"，从不 echo token；
 #     （PAT 会随 curl 参数短暂出现在同用户的进程列表里，进程退出后即消失）
 #   - 失败时只打印 HTTP 状态和响应体前三行，不打印请求头；
@@ -206,7 +207,34 @@ fi
 # ---------- push ----------
 
 say "→ 推送 $BRANCH 到 origin …"
-run git -C "$REPO_DIR" push -u origin "$BRANCH"
+# git push 需要自己的认证：GitHub 已关闭密码推送，只认 PAT。
+# 用 GIT_ASKPASS 临时脚本把同一把 PAT 交给 git，token 只在环境变量里，
+# 不出现在命令行参数中；脚本退出后临时文件立即删除。
+if [ "${DRY_RUN:-0}" = "1" ]; then
+  say "[dry-run] git -C $REPO_DIR push -u origin $BRANCH  # 经 GIT_ASKPASS 用 PAT 认证"
+else
+  askpass="$(mktemp)"
+  cat >"$askpass" <<'ASKPASS'
+#!/bin/sh
+case "$1" in
+  *Username*|*username*) printf '%s\n' "x-access-token" ;;
+  *) printf '%s\n' "$DSH_RADIO_GIT_TOKEN" ;;
+esac
+ASKPASS
+  chmod 700 "$askpass"
+  push_status=0
+  DSH_RADIO_GIT_TOKEN="$TOKEN" GIT_ASKPASS="$askpass" GIT_TERMINAL_PROMPT=0 \
+    git -C "$REPO_DIR" -c credential.helper= push -u origin "$BRANCH" || push_status=$?
+  rm -f "$askpass"
+  if [ "$push_status" -ne 0 ]; then
+    warn ""
+    warn "推送失败（退出码 $push_status）。常见原因："
+    warn "  · PAT 没有 Contents: Read and write 权限 → 回 GitHub 重新生成；"
+    warn "  · token 已过期或被删除；"
+    warn "  · 网络无法访问 github.com。"
+    exit "$push_status"
+  fi
+fi
 
 # ---------- topics 与 description ----------
 # 注：topics 接口对 fine-grained PAT 要求仓库 Administration 写权限；
