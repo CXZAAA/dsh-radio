@@ -92,6 +92,7 @@
 - 宿主半侧：`export const name = 'dsh-plugin-radio'`、`inject = ['webServer']`，用 `ctx.effect` + `ctx.webServer.register({ kind: 'exact', path: '/plugins/dsh-plugin-radio/now-playing', handler })` 注册只读路由；`station=main-mix|mellow-mix` → RP `chan=0|1`，5 秒超时，10 秒缓存，失败 502。宿主改动不热更新，需重启 dsh。
 - 轻量测试：`node:test` 校验 stations 数据（7 条、https、无 m3u8、主备不重复）、设置解析、Icecast/RP 解析与缓存、宿主路由（GET/POST/未知台/502/10 秒缓存）。
 - 安装脚本 `scripts/install-local.sh`：优先 `dsh plugin --profile web add link:<repo>`，失败时回退到 `pnpm add link:<repo>`；幂等地往 `~/.dsh/profiles/web/cordis.patch.yml` 追加 loader 行（文件不存在时先创建），并打印重启提示。
+- 组合包声明：`dsh.bundle.patch = ./cordis.patch.yml`，patch 内容为插入 `id: radio` / `name: dsh-plugin-radio` 一行；`files`/`exports` 需包含该文件。这样 dsh 的「插件 → 添加插件」可直接从 GitHub 仓库地址安装并自动启用。
 
 ## 验收
 

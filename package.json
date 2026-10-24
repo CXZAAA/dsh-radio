@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-radio",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "packageManager": "pnpm@12.8.1",
   "description": "Ambient internet radio for the DeepSeek Harness Web GUI",
   "keywords": [
@@ -27,14 +27,19 @@
     ".": {
       "default": "./lib/index.js"
     },
-    "./client": "./lib/client.js"
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml"
   },
   "main": "./lib/index.js",
   "files": [
     "lib/index.js",
-    "lib/client.js"
+    "lib/client.js",
+    "cordis.patch.yml"
   ],
   "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "platform": "web",
       "inject": [],

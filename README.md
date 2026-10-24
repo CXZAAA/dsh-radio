@@ -23,7 +23,19 @@ Ambient internet radio for the DeepSeek-Harness Web GUI. A 24px capsule sits in 
 
 要求：已安装并运行 dsh web，Node 22+，pnpm。
 
-### A. 从 GitHub 安装（推荐：克隆后用脚本）
+### A. 从 dsh 插件页安装（最省事）
+
+侧边栏 **插件 → 添加插件**，粘贴仓库地址：
+
+```
+https://github.com/CXZAAA/dsh-radio
+```
+
+点安装即可。包内声明了组合包 patch（`cordis.patch.yml`），插件页会把它写进 profile 并默认启用，不需要手动编辑配置。首次安装宿主半侧需要重启一次 dsh-web（插件页会提示 `restart-required`）。
+
+> 如果你之前用 `scripts/install-local.sh` 装过：先运行 `dsh plugin --profile web remove dsh-plugin-radio`，再删掉 `~/.dsh/profiles/web/cordis.patch.yml` 末尾 `# dsh-radio (managed by install-local.sh)` 那一段，然后用上面的方式装，避免同一行被写两次。
+
+### B. 克隆后用脚本安装（开发/自用）
 
 ```bash
 git clone https://github.com/CXZAAA/dsh-radio.git
@@ -53,7 +65,7 @@ dsh plugin --profile web add "git+https://github.com/CXZAAA/dsh-radio.git"
 注意：`github:` 简写在 pnpm 里默认走 SSH，没有 GitHub SSH key 的机器会卡住；用上面的 `git+https://` 形式。这条路径依赖 pnpm 能拉到仓库，未在本仓库 CI 中验证，失败时请改用上面的克隆脚本。
 </details>
 
-### B. 本地开发安装
+### C. 本地开发安装
 
 1. 构建：
 
